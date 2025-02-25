@@ -1,78 +1,131 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { LogIn } from 'lucide-react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Modal from './ui/Modal';
-import Button from './ui/Button';
 import Input from './ui/Input';
+import Button from './ui/Button';
+import { Mail, Lock, Eye, EyeOff, Moon } from 'lucide-react-native';
+import { useTheme } from './ThemeProvider';
 
 /**
- * LoginModal component for user authentication
+ * Login Modal component with enhanced styling
  */
-const LoginModal = ({ isOpen, onClose, onLogin }) => {
-  const [credentials, setCredentials] = useState({
-    email: '',
-    password: '',
-  });
+const LoginModal = ({ isVisible, onClose, onLogin }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const { theme } = useTheme();
+  const { colors, spacing, typography } = theme;
 
   const handleLogin = () => {
-    onLogin?.(credentials);
-    // Reset form
-    setCredentials({ email: '', password: '' });
+    // Form validation
+    if (!email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    
+    if (!password.trim()) {
+      setError('Password is required');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
+    // Simulate API call
+    setTimeout(() => {
+      setLoading(false);
+      onLogin(email, password);
+    }, 1000);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal 
+      isVisible={isVisible} 
+      onClose={onClose}
+      title="Welcome Back"
+      position="center"
+      backdropOpacity={0.7}
+    >
       <View style={styles.container}>
-        <Text style={styles.title}>Sign In</Text>
+        <View style={styles.header}>
+          <View style={[styles.logoContainer, { backgroundColor: colors.primaryLighter }]}>
+            <Moon size={48} color={colors.primary} />
+          </View>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Sign in to continue to your account
+          </Text>
+        </View>
         
-        <Text style={styles.description}>
-          Please sign in to respond to invitations
-        </Text>
+        {error ? (
+          <View style={[styles.errorContainer, { backgroundColor: colors.error + '15' }]}>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+          </View>
+        ) : null}
         
         <Input
           label="Email"
-          type="email"
-          value={credentials.email}
-          onChangeText={(text) => setCredentials({...credentials, email: text})}
-          placeholder="your@email.com"
-          required
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            setError('');
+          }}
+          placeholder="Enter your email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          leftIcon={<Mail size={20} color={colors.icon} />}
+          error={error && !email.trim() ? 'Email is required' : ''}
+          variant="outlined"
         />
         
         <Input
           label="Password"
-          type="password"
-          value={credentials.password}
-          onChangeText={(text) => setCredentials({...credentials, password: text})}
-          placeholder="••••••••"
-          required
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setError('');
+          }}
+          placeholder="Enter your password"
+          secureTextEntry={!showPassword}
+          leftIcon={<Lock size={20} color={colors.icon} />}
+          rightIcon={
+            <TouchableOpacity onPress={togglePasswordVisibility}>
+              {showPassword ? (
+                <EyeOff size={20} color={colors.icon} />
+              ) : (
+                <Eye size={20} color={colors.icon} />
+              )}
+            </TouchableOpacity>
+          }
+          error={error && !password.trim() ? 'Password is required' : ''}
+          variant="outlined"
         />
         
-        <Button 
-          variant="primary"
-          icon={<LogIn size={18} color="white" />}
+        <Button
+          title={loading ? "Signing in..." : "Sign In"}
           onPress={handleLogin}
+          loading={loading}
+          disabled={loading}
           fullWidth
-          style={styles.signInButton}
-        >
-          Sign In
-        </Button>
+          style={styles.loginButton}
+          elevation="sm"
+        />
         
-        <View style={styles.forgotPasswordContainer}>
-          <Button variant="link" onPress={() => {}}>
-            Forgot Password?
-          </Button>
-        </View>
-        
-        <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>Don't have an account?</Text>
-          <Button 
-            variant="secondary" 
-            onPress={() => {}} 
-            fullWidth
-            style={styles.createAccountButton}
-          >
-            Create Account
-          </Button>
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+            Don't have an account?
+          </Text>
+          <TouchableOpacity>
+            <Text style={[styles.signUpText, { color: colors.primary }]}>
+              Sign Up
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -81,41 +134,46 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
+    padding: 16,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  description: {
-    color: '#4b5563',
-    fontSize: 15,
+  header: {
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 16,
     textAlign: 'center',
   },
-  signInButton: {
+  errorContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  loginButton: {
     marginTop: 8,
   },
-  forgotPasswordContainer: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  signupContainer: {
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    alignItems: 'center',
   },
-  signupText: {
-    color: '#4b5563',
-    marginBottom: 8,
+  footerText: {
+    marginRight: 4,
   },
-  createAccountButton: {
-    marginTop: 8,
+  signUpText: {
+    fontWeight: '600',
   },
 });
 

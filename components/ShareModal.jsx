@@ -4,17 +4,23 @@ import { Share2, Copy, Check, ExternalLink } from 'lucide-react-native';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import * as Clipboard from 'expo-clipboard';
+import { useTheme } from './ThemeProvider';
 
 /**
  * ShareModal component for sharing event links
  */
 const ShareModal = ({ 
   isOpen, 
+  isVisible,
   onClose, 
   event,
   shareLink,
   onPreviewPublic
 }) => {
+  const isModalVisible = isVisible !== undefined ? isVisible : isOpen;
+  const { theme } = useTheme();
+  const { colors, typography, spacing } = theme;
+  
   const [copied, setCopied] = useState(false);
   
   // Reset copied status after 2 seconds
@@ -60,7 +66,7 @@ const ShareModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isVisible={isModalVisible} onClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <View style={styles.iconContainer}>

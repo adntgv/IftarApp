@@ -1,106 +1,216 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { Calendar, Clock, MapPin, Users, Check, X } from 'lucide-react-native';
 import Card from './ui/Card';
-import Button from './ui/Button';
+import Badge from './ui/Badge';
+import { useTheme } from './ThemeProvider';
 
 /**
- * EventCard component for displaying event information
+ * Enhanced EventCard component with animations and improved styling
  */
-const EventCard = ({ event, isInvite = false, onOpenEvent, onRespond, animate = '' }) => {
-  const [animationValue] = useState(new Animated.Value(1));
+const EventCard = ({ 
+  event, 
+  isInvite = false, 
+  onOpenEvent, 
+  onRespond, 
+  animate = '' 
+}) => {
+  const { theme } = useTheme();
+  const { colors, spacing, typography, animations } = theme;
   
-  useEffect(() => {
+  // Animation value for card
+  const [scaleValue] = React.useState(new Animated.Value(1));
+  
+  // Animation for pulse effect
+  React.useEffect(() => {
     if (animate === 'pulse') {
-      Animated.sequence([
-        Animated.timing(animationValue, {
-          toValue: 1.05,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animationValue, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        })
-      ]).start();
+      animations.presets.pulse(scaleValue).start();
     }
-  }, [animate, animationValue]);
-
-  const borderColor = isInvite 
-    ? event.status === 'confirmed' 
-      ? '#16a34a' 
-      : event.status === 'declined' 
-        ? '#dc2626' 
-        : '#ca8a04'
-    : '#3b82f6';
-      
+  }, [animate, scaleValue]);
+  
+  // Status badge color based on event status
+  const getStatusBadge = () => {
+    if (!isInvite) return null;
+    
+    let variant = 'primary';
+    let text = 'Pending';
+    
+    if (event.status === 'confirmed') {
+      variant = 'success';
+      text = 'Confirmed';
+    } else if (event.status === 'declined') {
+      variant = 'error';
+      text = 'Declined';
+    } else {
+      variant = 'warning';
+      text = 'Pending';
+    }
+    
+    return (
+      <Badge 
+        text={text} 
+        variant={variant} 
+        size="small"
+        style={styles.statusBadge}
+      />
+    );
+  };
+  
   return (
     <Animated.View 
       style={{ 
-        transform: [{ scale: animationValue }],
+        transform: [{ scale: scaleValue }],
+        marginBottom: spacing.spacing.md,
       }}
     >
       <Card 
-        borderColor={borderColor} 
         onPress={() => onOpenEvent(event)}
+        elevation="sm"
+        borderRadius="md"
         style={styles.card}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{event.title}</Text>
-          <Text style={styles.host}>{isInvite ? `Invited by ${event.host}` : 'You host'}</Text>
+          <Text 
+            style={[
+              styles.title, 
+              { 
+                color: colors.text,
+                fontSize: typography.fontSize.lg,
+                fontFamily: typography.fontFamily.medium,
+              }
+            ]}
+          >
+            {event.title}
+          </Text>
+          {getStatusBadge()}
         </View>
         
-        <View style={styles.infoRow}>
-          <Calendar size={16} color="#4b5563" style={styles.icon} />
-          <Text style={styles.infoText}>{event.date}</Text>
+        <View style={styles.content}>
+          <View style={styles.detailsContainer}>
+            <View style={styles.detailRow}>
+              <Calendar size={18} color={colors.primary} />
+              <Text 
+                style={[
+                  styles.detailText,
+                  { 
+                    color: colors.textSecondary,
+                    fontFamily: typography.fontFamily.regular,
+                  }
+                ]}
+              >
+                {event.date}
+              </Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <Clock size={18} color={colors.primary} />
+              <Text 
+                style={[
+                  styles.detailText,
+                  { 
+                    color: colors.textSecondary,
+                    fontFamily: typography.fontFamily.regular,
+                  }
+                ]}
+              >
+                {event.time || "7:00 PM"}
+              </Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <MapPin size={18} color={colors.primary} />
+              <Text 
+                style={[
+                  styles.detailText,
+                  { 
+                    color: colors.textSecondary,
+                    fontFamily: typography.fontFamily.regular,
+                  }
+                ]}
+                numberOfLines={1}
+              >
+                {event.location}
+              </Text>
+            </View>
+            
+            {event.attendees && (
+              <View style={styles.detailRow}>
+                <Users size={18} color={colors.primary} />
+                <Text 
+                  style={[
+                    styles.detailText,
+                    { 
+                      color: colors.textSecondary,
+                      fontFamily: typography.fontFamily.regular,
+                    }
+                  ]}
+                >
+                  {Array.isArray(event.attendees) ? event.attendees.length : 0} attendees
+                </Text>
+              </View>
+            )}
+          </View>
+          
+          {isInvite && event.status === 'pending' && (
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  styles.acceptButton,
+                  { backgroundColor: colors.success }
+                ]}
+                onPress={() => onRespond(event.id, 'confirmed')}
+              >
+                <Check size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  styles.declineButton,
+                  { backgroundColor: colors.error }
+                ]}
+                onPress={() => onRespond(event.id, 'declined')}
+              >
+                <X size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         
-        <View style={styles.infoRow}>
-          <Clock size={16} color="#4b5563" style={styles.icon} />
-          <Text style={styles.infoText}>{event.time}</Text>
-        </View>
-        
-        <View style={styles.infoRow}>
-          <MapPin size={16} color="#4b5563" style={styles.icon} />
-          <Text style={styles.infoText} numberOfLines={1}>{event.location}</Text>
-        </View>
-        
-        {!isInvite && event.attendees && (
-          <View style={styles.infoRow}>
-            <Users size={16} color="#4b5563" style={styles.icon} />
-            <Text style={styles.infoText}>
-              {event.attendees.filter(a => a.status === 'confirmed').length} confirmed
+        {event.description && (
+          <View style={styles.footer}>
+            <Text 
+              style={[
+                styles.description,
+                { 
+                  color: colors.textTertiary,
+                  fontSize: typography.fontSize.sm,
+                  fontFamily: typography.fontFamily.regular,
+                }
+              ]}
+              numberOfLines={2}
+            >
+              {event.description}
             </Text>
           </View>
         )}
         
-        {isInvite && (
-          <View style={styles.buttonContainer}>
-            <Button 
-              variant={event.status === 'confirmed' ? 'success' : 'secondary'}
-              icon={<Check size={14} color={event.status === 'confirmed' ? 'white' : '#4b5563'} />}
-              onPress={(e) => {
-                // Prevent event propagation
-                e.stopPropagation?.();
-                onRespond(event.id, 'confirmed');
+        {event.isPublic && (
+          <View 
+            style={[
+              styles.publicBadge, 
+              { backgroundColor: colors.primary }
+            ]}
+          >
+            <Text 
+              style={{ 
+                color: '#FFFFFF', 
+                fontSize: typography.fontSize.xs,
+                fontFamily: typography.fontFamily.medium,
               }}
-              style={styles.respondButton}
             >
-              Accept
-            </Button>
-            <Button 
-              variant={event.status === 'declined' ? 'danger' : 'secondary'}
-              icon={<X size={14} color={event.status === 'declined' ? 'white' : '#4b5563'} />}
-              onPress={(e) => {
-                // Prevent event propagation
-                e.stopPropagation?.();
-                onRespond(event.id, 'declined');
-              }}
-              style={styles.respondButton}
-            >
-              Decline
-            </Button>
+              PUBLIC
+            </Text>
           </View>
         )}
       </Card>
@@ -110,44 +220,72 @@ const EventCard = ({ event, isInvite = false, onOpenEvent, onRespond, animate = 
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 16,
+    borderLeftWidth: 0,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
     flex: 1,
-  },
-  host: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  icon: {
     marginRight: 8,
   },
-  infoText: {
-    color: '#4b5563',
-    fontSize: 14,
+  statusBadge: {
+    marginLeft: 'auto',
   },
-  buttonContainer: {
+  content: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
   },
-  respondButton: {
-    flex: 0.48,
-  }
+  detailsContainer: {
+    flex: 1,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  detailText: {
+    marginLeft: 8,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  acceptButton: {
+    marginRight: 8,
+  },
+  declineButton: {},
+  footer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  description: {
+    fontStyle: 'italic',
+  },
+  publicBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 0,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+  },
 });
 
 export default EventCard; 

@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet } from 'react-native';
+import { 
+  View, 
+  TextInput, 
+  Text, 
+  StyleSheet, 
+  Animated, 
+  Pressable,
+  TouchableOpacity 
+} from 'react-native';
+import { useTheme } from '../ThemeProvider';
 
 /**
- * A reusable Input component that supports text inputs and textareas
+ * Enhanced Input component with animations and theming
  */
 const Input = ({
   label,
@@ -10,134 +19,257 @@ const Input = ({
   onChangeText,
   placeholder,
   secureTextEntry,
-  keyboardType,
-  autoCapitalize,
   error,
-  multiline,
-  numberOfLines,
-  rightIcon,
-  leftIcon,
-  disabled,
-  onBlur,
-  onFocus,
+  multiline = false,
+  numberOfLines = 1,
+  autoCapitalize = 'none',
+  autoCorrect = false,
+  keyboardType = 'default',
   style,
   inputStyle,
   labelStyle,
-  containerStyle,
-  ...props
+  leftIcon,
+  rightIcon,
+  onBlur,
+  onFocus,
+  maxLength,
+  disabled = false,
+  required = false,
+  helperText,
+  textAlignVertical,
+  placeholderTextColor,
+  variant = 'outlined', // outlined, filled, underlined
+  size = 'medium', // small, medium, large
 }) => {
+  const { theme } = useTheme();
+  const { colors, spacing, typography } = theme;
+  
+  // State
   const [isFocused, setIsFocused] = useState(false);
-
+  const [focusAnim] = useState(new Animated.Value(0));
+  
+  // Animation on focus/blur
+  React.useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+  
+  // Size configurations
+  const sizeConfig = {
+    small: {
+      paddingVertical: spacing.spacing.xs,
+      paddingHorizontal: spacing.spacing.sm,
+      fontSize: typography.fontSize.sm,
+    },
+    medium: {
+      paddingVertical: spacing.spacing.sm,
+      paddingHorizontal: spacing.spacing.md,
+      fontSize: typography.fontSize.base,
+    },
+    large: {
+      paddingVertical: spacing.spacing.md,
+      paddingHorizontal: spacing.spacing.md,
+      fontSize: typography.fontSize.lg,
+    },
+  };
+  
+  // Variant styles
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'filled':
+        return {
+          container: {
+            backgroundColor: isFocused 
+              ? colors.backgroundSecondary 
+              : colors.backgroundTertiary,
+            borderWidth: 0,
+            borderRadius: spacing.borderRadius.md,
+          },
+          input: {
+            backgroundColor: 'transparent',
+          },
+        };
+      case 'underlined':
+        return {
+          container: {
+            backgroundColor: 'transparent',
+            borderWidth: 0,
+            borderBottomWidth: 1,
+            borderBottomColor: isFocused 
+              ? colors.primary 
+              : error 
+                ? colors.error 
+                : colors.border,
+            borderRadius: 0,
+          },
+          input: {
+            backgroundColor: 'transparent',
+          },
+        };
+      case 'outlined':
+      default:
+        return {
+          container: {
+            backgroundColor: 'transparent',
+            borderWidth: 1,
+            borderColor: isFocused 
+              ? colors.primary 
+              : error 
+                ? colors.error 
+                : colors.border,
+            borderRadius: spacing.borderRadius.md,
+          },
+          input: {
+            backgroundColor: 'transparent',
+          },
+        };
+    }
+  };
+  
+  const variantStyles = getVariantStyles();
+  const currentSize = sizeConfig[size];
+  
+  const borderColor = error 
+    ? colors.error 
+    : isFocused 
+      ? colors.primary 
+      : colors.border;
+  
+  // Handle focus
   const handleFocus = (e) => {
     setIsFocused(true);
     onFocus && onFocus(e);
   };
-
+  
+  // Handle blur
   const handleBlur = (e) => {
     setIsFocused(false);
     onBlur && onBlur(e);
   };
-
+  
   return (
-    <View style={[styles.container, containerStyle]}>{label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
+    <View style={[styles.wrapper, style]}>
+      {label && (
+        <View style={styles.labelContainer}>
+          <Text 
+            style={[
+              styles.label, 
+              {
+                color: error 
+                  ? colors.error 
+                  : isFocused 
+                    ? colors.primary 
+                    : colors.textSecondary,
+                fontSize: typography.fontSize.sm,
+                fontFamily: typography.fontFamily.medium,
+              },
+              labelStyle,
+            ]}
+          >
+            {label} {required && <Text style={{ color: colors.error }}>*</Text>}
+          </Text>
+        </View>
+      )}
       
       <View
         style={[
-          styles.inputContainer,
-          isFocused && styles.focused,
-          error && styles.error,
-          disabled && styles.disabled,
-          style,
+          styles.container,
+          variantStyles.container,
+          {
+            paddingVertical: multiline ? spacing.spacing.sm : 0,
+          },
         ]}
       >
-        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+        {leftIcon && (
+          <View style={styles.leftIcon}>
+            {leftIcon}
+          </View>
+        )}
         
         <TextInput
           style={[
             styles.input,
-            multiline && styles.multiline,
-            leftIcon && styles.inputWithLeftIcon,
-            rightIcon && styles.inputWithRightIcon,
+            variantStyles.input,
+            {
+              color: disabled ? colors.textTertiary : colors.text,
+              paddingVertical: currentSize.paddingVertical,
+              paddingHorizontal: leftIcon || rightIcon ? 0 : currentSize.paddingHorizontal,
+              fontSize: currentSize.fontSize,
+              fontFamily: typography.fontFamily.regular,
+              textAlignVertical: multiline ? 'top' : textAlignVertical,
+            },
             inputStyle,
           ]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
+          placeholderTextColor={placeholderTextColor || colors.textTertiary}
           secureTextEntry={secureTextEntry}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
           multiline={multiline}
-          numberOfLines={numberOfLines}
-          editable={!disabled}
+          numberOfLines={multiline ? numberOfLines : 1}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
+          keyboardType={keyboardType}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          placeholderTextColor="#9ca3af"
-          {...props}
+          maxLength={maxLength}
+          editable={!disabled}
         />
         
-        {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        {rightIcon && (
+          <View style={styles.rightIcon}>
+            {rightIcon}
+          </View>
+        )}
       </View>
       
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {(error || helperText) && (
+        <Text 
+          style={[
+            styles.helperText, 
+            {
+              color: error ? colors.error : colors.textTertiary,
+              fontSize: typography.fontSize.xs,
+            }
+          ]}
+        >
+          {error || helperText}
+        </Text>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
-    color: '#374151',
+  labelContainer: {
     marginBottom: 6,
-    fontWeight: '500',
   },
-  inputContainer: {
+  label: {
+    marginBottom: 4,
+  },
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    overflow: 'hidden',
   },
   input: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    color: '#1f2937',
-  },
-  multiline: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  inputWithLeftIcon: {
-    paddingLeft: 8,
-  },
-  inputWithRightIcon: {
-    paddingRight: 8,
-  },
-  focused: {
-    borderColor: '#3b82f6',
-    borderWidth: 2,
-  },
-  error: {
-    borderColor: '#ef4444',
-  },
-  disabled: {
-    backgroundColor: '#f3f4f6',
-    opacity: 0.7,
   },
   leftIcon: {
     paddingLeft: 12,
+    paddingRight: 8,
   },
   rightIcon: {
     paddingRight: 12,
+    paddingLeft: 8,
   },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 12,
+  helperText: {
     marginTop: 4,
   },
 });

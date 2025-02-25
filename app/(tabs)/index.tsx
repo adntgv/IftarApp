@@ -98,23 +98,17 @@ export default function HomeScreen() {
       {/* Modals */}
       <EventDetails 
         event={selectedEvent} 
-        isOpen={selectedEvent !== null} 
-        onClose={handleCloseEvent} 
-        onShare={() => {
-          handleOpenShareModal();
-        }}
-        onInvite={(email: string) => {
-          // Handle invite functionality here
-          if (selectedEvent) {
-            console.log(`Invited ${email} to event ${selectedEvent.id}`);
-          }
-        }}
+        isVisible={selectedEvent !== null} 
+        onClose={handleCloseEvent}
         onRespond={handleRespond}
+        onShare={handleOpenShareModal}
+        onInvite={() => {}}
       />
       
       <ShareModal 
         event={selectedEvent} 
-        isOpen={showShareModal} 
+        isOpen={showShareModal}
+        isVisible={showShareModal} 
         onClose={handleCloseShareModal}
         shareLink={getShareLink(selectedEvent)}
         onPreviewPublic={handleViewPublicEvent}

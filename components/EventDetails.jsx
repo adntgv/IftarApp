@@ -5,18 +5,24 @@ import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Badge from './ui/Badge';
+import { useTheme } from './ThemeProvider';
 
 /**
  * EventDetails component for displaying detailed event information
  */
 const EventDetails = ({ 
   event, 
-  isOpen, 
+  isOpen,
+  isVisible,
   onClose, 
   onInvite, 
   onShare, 
   onRespond 
 }) => {
+  const isModalVisible = isVisible !== undefined ? isVisible : isOpen;
+  const { theme } = useTheme();
+  const { colors, typography, spacing } = theme;
+  
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteSent, setInviteSent] = useState(false);
@@ -49,7 +55,7 @@ const EventDetails = ({
   if (!event) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isVisible={isModalVisible} onClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
           {/* Header */}

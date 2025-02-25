@@ -71,7 +71,7 @@ export default function InvitesScreen() {
     <View style={styles.container}>
       <Header 
         title="Your Invitations" 
-        action={toggleViewMode}
+        action={() => toggleViewMode()}
         actionLabel={viewMode === 'card' ? 'List View' : 'Card View'}
       />
       
@@ -88,7 +88,7 @@ export default function InvitesScreen() {
       {/* Modals */}
       <EventDetails 
         event={selectedEvent} 
-        isOpen={selectedEvent !== null} 
+        isVisible={selectedEvent !== null} 
         onClose={handleCloseEvent}
         onRespond={handleRespond}
         onShare={() => {}}
@@ -96,7 +96,7 @@ export default function InvitesScreen() {
       />
       
       <LoginModal 
-        isOpen={showLogin} 
+        isVisible={showLogin} 
         onClose={() => setShowLogin(false)} 
         onLogin={handleLogin}
       />

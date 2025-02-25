@@ -1,9 +1,19 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, Platform } from 'react-native';
+import { 
+  TouchableOpacity, 
+  Text, 
+  StyleSheet, 
+  View, 
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  Platform,
+} from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '../ThemeProvider';
 
 /**
- * A reusable Button component with multiple variants
+ * Enhanced Button component with animation, haptic feedback, and theming
  */
 const Button = ({
   title,
@@ -18,142 +28,233 @@ const Button = ({
   iconPosition = 'left',
   hapticFeedback = true,
   size = 'medium',
+  elevation = 'none',
+  animateOnPress = true,
+  children,
 }) => {
-  // Style configuration
+  // Access theme
+  const { theme } = useTheme();
+  const { colors, spacing, typography, animations } = theme || {};
+
+  // Animation scale value
+  const [scaleValue] = React.useState(new Animated.Value(1));
+  
+  // Scale animation on press
+  const handlePressIn = () => {
+    if (animateOnPress && !disabled) {
+      Animated.timing(scaleValue, {
+        toValue: 0.96,
+        duration: 100,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+  
+  const handlePressOut = () => {
+    if (animateOnPress && !disabled) {
+      Animated.timing(scaleValue, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  // Haptic feedback
+  const handlePress = () => {
+    if (disabled || loading) return;
+    
+    // Only use haptics on native platforms (iOS/Android), not on web
+    if (hapticFeedback && Platform.OS !== 'web') {
+      switch (variant) {
+        case 'primary':
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          break;
+        case 'secondary':
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          break;
+        default:
+          Haptics.selectionAsync();
+          break;
+      }
+    }
+    
+    onPress?.();
+  };
+  
+  // Ensure spacing is available before using it
+  if (!spacing || !colors || !typography) {
+    // Fallback styles if theme is not available
+    return (
+      <TouchableOpacity 
+        style={[{ padding: 12, backgroundColor: '#1890ff', borderRadius: 6 }, style]} 
+        onPress={onPress}
+        disabled={disabled || loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={{ color: '#ffffff', fontSize: 16 }}>{title || children}</Text>
+        )}
+      </TouchableOpacity>
+    );
+  }
+  
+  // Size styles
   const sizeStyles = {
     small: {
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      fontSize: 14,
+      paddingVertical: spacing.spacing?.xs || 4,
+      paddingHorizontal: spacing.spacing?.sm || 8,
+      fontSize: typography.fontSize?.sm || 14,
     },
     medium: {
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      fontSize: 16,
+      paddingVertical: spacing.spacing?.sm || 8,
+      paddingHorizontal: spacing.spacing?.md || 16,
+      fontSize: typography.fontSize?.base || 16,
     },
     large: {
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      fontSize: 18,
+      paddingVertical: spacing.spacing?.md || 12,
+      paddingHorizontal: spacing.spacing?.lg || 20,
+      fontSize: typography.fontSize?.lg || 18,
     },
+  };
+
+  // Variant styles with defaults
+  const defaultPrimary = {
+    backgroundColor: colors?.primary || '#1890ff',
+    borderColor: colors?.primary || '#1890ff',
+    color: '#ffffff',
   };
 
   // Variant styles
   const variantStyles = {
     primary: {
-      backgroundColor: '#3b82f6',
-      borderColor: '#3b82f6',
-      color: '#ffffff',
+      backgroundColor: disabled ? (colors?.backgroundTertiary || '#f5f5f5') : (colors?.primary || '#1890ff'),
+      borderColor: disabled ? (colors?.backgroundTertiary || '#f5f5f5') : (colors?.primary || '#1890ff'),
+      color: disabled ? (colors?.textTertiary || '#8c8c8c') : '#ffffff',
     },
     secondary: {
-      backgroundColor: '#f3f4f6',
-      borderColor: '#d1d5db',
-      color: '#374151',
+      backgroundColor: 'transparent',
+      borderColor: disabled ? (colors?.textTertiary || '#8c8c8c') : (colors?.primary || '#1890ff'),
+      borderWidth: 1,
+      color: disabled ? (colors?.textTertiary || '#8c8c8c') : (colors?.primary || '#1890ff'),
     },
     outline: {
       backgroundColor: 'transparent',
-      borderColor: '#3b82f6',
-      color: '#3b82f6',
+      borderColor: disabled ? (colors?.border || '#e8e8e8') : (colors?.border || '#e8e8e8'),
+      borderWidth: 1,
+      color: disabled ? (colors?.textTertiary || '#8c8c8c') : (colors?.text || '#262626'),
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      color: disabled ? (colors?.textTertiary || '#8c8c8c') : (colors?.primary || '#1890ff'),
     },
     danger: {
-      backgroundColor: '#ef4444',
-      borderColor: '#ef4444',
+      backgroundColor: disabled ? (colors?.backgroundTertiary || '#f5f5f5') : (colors?.error || '#f5222d'),
+      borderColor: disabled ? (colors?.backgroundTertiary || '#f5f5f5') : (colors?.error || '#f5222d'),
       color: '#ffffff',
     },
     success: {
-      backgroundColor: '#10b981',
-      borderColor: '#10b981',
+      backgroundColor: disabled ? (colors?.backgroundTertiary || '#f5f5f5') : (colors?.success || '#52c41a'),
+      borderColor: disabled ? (colors?.backgroundTertiary || '#f5f5f5') : (colors?.success || '#52c41a'),
       color: '#ffffff',
     },
-    text: {
+    icon: {
       backgroundColor: 'transparent',
-      borderColor: 'transparent',
-      color: '#3b82f6',
-      paddingHorizontal: 0,
-      paddingVertical: 0,
-    },
-    link: {
-      backgroundColor: 'transparent',
-      borderColor: 'transparent',
-      color: '#3b82f6',
-      paddingHorizontal: 4,
-      paddingVertical: 4,
+      color: colors?.icon || '#8c8c8c',
+      padding: spacing.spacing?.xs || 4,
     },
   };
 
-  // Handler with haptic feedback
-  const handlePress = () => {
-    if (!disabled && !loading) {
-      if (hapticFeedback && Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      onPress && onPress();
-    }
-  };
+  // Get the current variant style or default to primary if not found
+  const currentVariantStyle = variantStyles[variant] || variantStyles.primary;
 
-  // Get the correct styles based on props
-  const buttonVariantStyle = variantStyles[variant] || variantStyles.primary;
-  const buttonSizeStyle = sizeStyles[size] || sizeStyles.medium;
-  
-  const buttonStyle = {
-    ...styles.button,
-    ...buttonVariantStyle,
-    ...buttonSizeStyle,
-    ...(fullWidth && styles.fullWidth),
-    ...(disabled && styles.disabled),
-    ...(variant !== 'text' && variant !== 'link' && styles.buttonWithBorder),
-    ...style,
-  };
-  
-  const buttonTextStyle = {
-    ...styles.text,
-    color: buttonVariantStyle.color,
-    fontSize: buttonSizeStyle.fontSize,
-    ...(disabled && styles.disabledText),
-    ...textStyle,
-  };
+  // Dynamic styles based on props
+  const buttonStyles = [
+    styles.button,
+    {
+      paddingVertical: sizeStyles[size]?.paddingVertical || sizeStyles.medium.paddingVertical,
+      paddingHorizontal: sizeStyles[size]?.paddingHorizontal || sizeStyles.medium.paddingHorizontal,
+      backgroundColor: currentVariantStyle.backgroundColor,
+      borderColor: currentVariantStyle.borderColor,
+      borderWidth: currentVariantStyle.borderWidth || 0,
+      opacity: disabled ? 0.6 : 1,
+      ...(elevation !== 'none' && spacing.elevation && spacing.elevation[elevation] || {}),
+      width: fullWidth ? '100%' : undefined,
+    },
+    variant !== 'icon' && styles.buttonRadius,
+    style,
+  ];
+
+  const textStyles = [
+    styles.text,
+    {
+      color: currentVariantStyle.color,
+      fontSize: sizeStyles[size]?.fontSize || sizeStyles.medium.fontSize,
+      fontFamily: typography.fontFamily.medium,
+    },
+    textStyle,
+  ];
+
+  // Render loading state
+  if (loading) {
+    return (
+      <View style={buttonStyles}>
+        <ActivityIndicator 
+          size="small" 
+          color={currentVariantStyle.color} 
+        />
+      </View>
+    );
+  }
 
   return (
-    <TouchableOpacity
-      style={buttonStyle}
+    <Pressable
       onPress={handlePress}
-      disabled={disabled || loading}
-      activeOpacity={0.7}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+      style={({ pressed }) => [
+        { opacity: (pressed && !animateOnPress && !disabled) ? 0.85 : 1 }
+      ]}
     >
-      <View style={styles.contentContainer}>
-        {icon && iconPosition === 'left' && <View style={styles.iconLeft}>{icon}</View>}
-        {title && <Text style={buttonTextStyle}>{title}</Text>}
-        {icon && iconPosition === 'right' && <View style={styles.iconRight}>{icon}</View>}
-      </View>
-    </TouchableOpacity>
+      <Animated.View 
+        style={[
+          ...buttonStyles, 
+          { transform: [{ scale: scaleValue }] }
+        ]}
+      >
+        {icon && iconPosition === 'left' && (
+          <View style={styles.iconLeft}>
+            {icon}
+          </View>
+        )}
+        
+        {title && <Text style={textStyles}>{title}</Text>}
+        
+        {icon && iconPosition === 'right' && (
+          <View style={styles.iconRight}>
+            {icon}
+          </View>
+        )}
+        
+        {icon && !title && <View>{icon}</View>}
+      </Animated.View>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonWithBorder: {
-    borderWidth: 1,
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  disabledText: {
-    opacity: 0.8,
-  },
-  contentContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonRadius: {
+    borderRadius: 8,
   },
   text: {
-    fontWeight: '600',
+    textAlign: 'center',
   },
   iconLeft: {
     marginRight: 8,

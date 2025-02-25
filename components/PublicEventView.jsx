@@ -4,6 +4,7 @@ import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check } fro
 import Button from './ui/Button';
 import Card from './ui/Card';
 import * as Linking from 'expo-linking';
+import Modal from './ui/Modal';
 
 /**
  * PublicEventView component for publicly sharing events
@@ -11,11 +12,15 @@ import * as Linking from 'expo-linking';
 const PublicEventView = ({ 
   event, 
   isOpen, 
+  isVisible,
   onClose, 
   isLoggedIn, 
   onLogin, 
   onRespond 
 }) => {
+  // Use either isVisible or isOpen prop, preferring isVisible if provided
+  const isModalVisible = isVisible !== undefined ? isVisible : isOpen;
+  
   // Add moon float animation
   const [floatAnim] = React.useState(new Animated.Value(0));
   
@@ -43,7 +48,7 @@ const PublicEventView = ({
     outputRange: [0, -15],
   });
 
-  if (!isOpen || !event) return null;
+  if (!isModalVisible || !event) return null;
 
   // Calculate days until event
   const eventDate = new Date(event.date);
