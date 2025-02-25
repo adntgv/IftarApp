@@ -31,8 +31,7 @@ const Badge = ({ status, text, style = {} }) => {
         borderRadius: 9999,
       },
       style
-    ]}>
-      <Text style={{
+    ]}><Text style={{
         color: statusColors.text,
         fontSize: 12,
         fontWeight: '500',

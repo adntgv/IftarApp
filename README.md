@@ -1,50 +1,126 @@
-# Welcome to your Expo app 👋
+# Iftar App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A community-focused application for planning and sharing Iftar events during Ramadan.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 🔐 **User Authentication**: Secure email & password authentication
+- 📅 **Event Management**: Create, manage and share Iftar events
+- 📨 **Invitations**: Invite friends and family via email
+- 🔄 **RSVP System**: Manage attendance with a simple RSVP system
+- 🔗 **Public Sharing**: Generate shareable links for your events
+- 📱 **Responsive Design**: Works on both mobile and web
 
-   ```bash
-   npm install
-   ```
+## Technology Stack
 
-2. Start the app
+- **Frontend**: React Native with Expo
+- **Backend**: Appwrite (self-hosted)
+- **State Management**: Zustand
+- **Authentication**: Appwrite Auth
+- **Database**: Appwrite Database
+- **Environment Management**: Expo Config
 
-   ```bash
-    npx expo start
-   ```
+## Getting Started
 
-In the output, you'll find options to open the app in a
+### Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js (v14 or newer)
+- Yarn or npm
+- Expo CLI (`npm install -g expo-cli`)
+- An Appwrite instance (self-hosted or cloud)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Installation
 
-## Get a fresh project
-
-When you're ready, run:
-
+1. Clone the repository
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/iftar-app.git
+cd iftar-app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies
+```bash
+yarn install
+# or
+npm install
+```
 
-## Learn more
+3. Set up your environment variables by creating a `.env` file:
+```
+EXPO_PUBLIC_APPWRITE_ENDPOINT=https://appwrite.adntgv.com/v1
+EXPO_PUBLIC_APPWRITE_PROJECT_ID=67be273b00380449cff1
+EXPO_PUBLIC_DATABASE_ID=67be2835003c542ca773
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Set up your Appwrite project:
+- Create a new project in your Appwrite console
+- Create a database and collections according to the `appwrite.json` configuration
+- Set up the correct permissions for each collection
+- Enable email authentication
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+5. Start the development server
+```bash
+yarn start
+# or
+npm start
+```
 
-## Join the community
+## Project Structure
 
-Join our community of developers creating universal apps.
+```
+iftar-app/
+├── app/                 # Expo Router application screens
+│   ├── (auth)/          # Authentication screens (login, signup)
+│   ├── (tabs)/          # Main app tabs
+│   └── _layout.tsx      # Root layout with authentication handling
+├── components/          # UI components
+│   ├── ui/              # Reusable UI components
+│   └── ...              # Feature-specific components
+├── utils/               # Utility functions
+│   ├── appwrite.js      # Appwrite configuration
+│   ├── env.js           # Environment variables
+│   └── eventService.js  # Event-related API functions
+├── hooks/               # Custom React hooks
+│   ├── useAuth.js       # Authentication hook
+│   └── useEvents.js     # Events management hook
+├── constants/           # App constants
+├── assets/              # Static assets
+└── appwrite.json        # Appwrite collections and permissions config
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Deployment
+
+### Deploying the Backend (Appwrite)
+
+1. Set up your Appwrite instance (Docker recommended)
+2. Import the `appwrite.json` configuration
+3. Create users with appropriate roles
+4. Configure authentication settings
+
+### Deploying the App
+
+#### Web
+```bash
+yarn build:web
+# or
+npm run build:web
+```
+
+#### Android/iOS
+```bash
+eas build --platform android
+eas build --platform ios
+```
+
+## Contributing
+
+We welcome contributions to the Iftar App! Please check out our [Contributing Guide](CONTRIBUTING.md) to get started.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+- The Muslim community for inspiration
+- Appwrite for the backend infrastructure
+- Expo and React Native for the development framework

@@ -36,6 +36,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "APPWRITE_ENDPOINT": "https://appwrite.adntgv.com/v1",
+      "APPWRITE_PROJECT_ID": "67be273b00380449cff1",
+      "DATABASE_ID": "67be2835003c542ca773",
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
     }
   }
 }

@@ -16,8 +16,7 @@ const EventList = ({
 
   if (events.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
+      <View style={styles.emptyContainer}><Text style={styles.emptyText}>
           {isInvites ? "No invitations yet" : "No events yet"}
         </Text>
       </View>
@@ -40,8 +39,7 @@ const EventList = ({
       style={styles.listItem}
       onPress={() => onOpenEvent(item)}
     >
-      <View>
-        <Text style={styles.listItemTitle}>{item.title}</Text>
+      <View><Text style={styles.listItemTitle}>{item.title}</Text>
         <Text style={styles.listItemSubtitle}>{item.date} • {item.time}</Text>
       </View>
       <ChevronRight size={20} color="#9ca3af" />

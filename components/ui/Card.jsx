@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
+import { createShadow } from '../../utils/styles';
 
 /**
  * A reusable Card component that can be clickable
@@ -26,11 +27,12 @@ const Card = ({
           backgroundColor: 'white',
           borderRadius: 12,
           padding: 16,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 2,
+          ...createShadow({
+            opacity: 0.1,
+            offsetY: 2,
+            radius: 4,
+            elevation: 2
+          }),
           borderLeftWidth: 4,
           borderLeftColor: borderColor,
         },

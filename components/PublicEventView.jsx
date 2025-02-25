@@ -26,12 +26,12 @@ const PublicEventView = ({
         Animated.timing(floatAnim, {
           toValue: 1,
           duration: 3000,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(floatAnim, {
           toValue: 0,
           duration: 3000,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ])
     ).start();
@@ -90,22 +90,18 @@ const PublicEventView = ({
           
           {/* Event title section */}
           <View style={styles.titleContainer}>
-            <View style={styles.titleCard}>
-              <Text style={styles.title}>{event.title}</Text>
+            <View style={styles.titleCard}><Text style={styles.title}>{event.title}</Text>
               <Text style={styles.host}>Hosted by {event.host}</Text>
               
               {/* Add the countdown widgets */}
               <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Days Until Iftar</Text>
+                <View style={styles.statItem}><Text style={styles.statLabel}>Days Until Iftar</Text>
                   <Text style={styles.statValueDays}>{diffDays}</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Sunset</Text>
+                <View style={styles.statItem}><Text style={styles.statLabel}>Sunset</Text>
                   <Text style={styles.statValueSunset}>{sunsetTime}</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Attending</Text>
+                <View style={styles.statItem}><Text style={styles.statLabel}>Attending</Text>
                   <Text style={styles.statValueAttending}>
                     {event.attendees 
                       ? event.attendees.filter(a => a.status === 'confirmed').length 
@@ -126,16 +122,14 @@ const PublicEventView = ({
               
               <View style={styles.detailRow}>
                 <Calendar size={20} color="#6b7280" style={styles.detailIcon} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Date & Time</Text>
+                <View style={styles.detailContent}><Text style={styles.detailLabel}>Date & Time</Text>
                   <Text style={styles.detailText}>{event.date} at {event.time}</Text>
                 </View>
               </View>
               
               <View style={styles.infoRow}>
                 <MapPin size={20} color="#6b7280" style={styles.infoIcon} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.infoLabel}>Location</Text>
+                <View style={styles.detailContent}><Text style={styles.infoLabel}>Location</Text>
                   <Text style={styles.infoValue}>{event.location}</Text>
                   <Button 
                     variant="link" 
@@ -151,8 +145,7 @@ const PublicEventView = ({
               {event.description && (
                 <View style={styles.detailRow}>
                   <Edit size={20} color="#6b7280" style={styles.detailIcon} />
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Description</Text>
+                  <View style={styles.detailContent}><Text style={styles.detailLabel}>Description</Text>
                     <Text style={styles.detailText}>{event.description}</Text>
                   </View>
                 </View>
@@ -163,22 +156,19 @@ const PublicEventView = ({
           {/* Host information and RSVP */}
           <View style={styles.hostContainer}>
             <Card style={styles.hostCard}>
-              <View style={styles.hostHeader}>
-                <Text style={styles.hostHeaderText}>About the Host</Text>
+              <View style={styles.hostHeader}><Text style={styles.hostHeaderText}>About the Host</Text>
               </View>
               
               <View style={styles.hostInfo}>
                 <View style={styles.hostAvatar}>
                   <User size={24} color="#3b82f6" />
                 </View>
-                <View>
-                  <Text style={styles.hostName}>{event.host}</Text>
+                <View><Text style={styles.hostName}>{event.host}</Text>
                   <Text style={styles.hostRole}>Event Organizer</Text>
                 </View>
               </View>
               
-              <View style={styles.rsvpContainer}>
-                <Text style={styles.rsvpText}>
+              <View style={styles.rsvpContainer}><Text style={styles.rsvpText}>
                   Would you like to attend this iftar event?
                 </Text>
                 
