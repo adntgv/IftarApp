@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { initialEvents, initialInvites, generateShareCode } from '../utils/mockData';
+import * as Clipboard from 'expo-clipboard';
 
 // Import components
 import Header from '../components/Header';
@@ -18,7 +19,7 @@ import ProfileView from '../components/ProfileView';
 /**
  * Main app component
  */
-export default function IftarApp() {
+const IftarApp = () => {
   // State
   const [activeTab, setActiveTab] = useState('home');
   const [events, setEvents] = useState(initialEvents);
@@ -39,6 +40,18 @@ export default function IftarApp() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showPublicView, setShowPublicView] = useState(false);
   const [publicViewEvent, setPublicViewEvent] = useState(null);
+  const [animation, setAnimation] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Animation effect
+  useEffect(() => {
+    if (animation) {
+      const timer = setTimeout(() => {
+        setAnimation('');
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [animation]);
 
   // Handle tab navigation
   const handleChangeTab = (tab) => {
@@ -53,6 +66,7 @@ export default function IftarApp() {
   // Toggle view mode between card and list
   const toggleViewMode = () => {
     setViewMode(viewMode === 'card' ? 'list' : 'card');
+    setAnimation('toggle');
   };
 
   // Create new event
@@ -76,6 +90,7 @@ export default function IftarApp() {
     });
     setIsCreating(false);
     setActiveTab('home');
+    setAnimation('create');
   };
 
   // Respond to invitation
@@ -89,16 +104,28 @@ export default function IftarApp() {
       invite.id === id ? { ...invite, status } : invite
     );
     setInvites(updatedInvites);
+    setAnimation('respond');
   };
 
   // Open event details
   const handleOpenEvent = (event) => {
     setSelectedEvent(event);
+    setAnimation('open');
   };
 
   // Close event details
   const handleCloseEvent = () => {
     setSelectedEvent(null);
+  };
+
+  // Open share modal without closing event details
+  const handleOpenShareModal = () => {
+    setShowShareModal(true);
+  };
+
+  // Close share modal
+  const handleCloseShareModal = () => {
+    setShowShareModal(false);
   };
 
   // Handle login
@@ -108,10 +135,31 @@ export default function IftarApp() {
     setShowLogin(false);
   };
 
+  // Copy share link
+  const handleCopyLink = async (shareCode) => {
+    const shareLink = `https://iftar-app.example.com/event/${shareCode}`;
+    await Clipboard.setStringAsync(shareLink);
+    setLinkCopied(true);
+    
+    // Reset copied state after timeout
+    setTimeout(() => {
+      setLinkCopied(false);
+    }, 2000);
+  };
+
+  // Generate share link for an event
+  const getShareLink = (event) => {
+    if (!event) return '';
+    return `https://iftar-app.example.com/event/${event.shareCode}`;
+  };
+
   // View public event
   const handleViewPublicEvent = (event) => {
     setPublicViewEvent(event);
     setShowPublicView(true);
+    // Close both the share modal and the event details modal
+    handleCloseShareModal();
+    setSelectedEvent(null); // Close the EventDetails modal
   };
 
   // Determine which content to show based on active tab
@@ -123,6 +171,7 @@ export default function IftarApp() {
             events={events} 
             viewMode={viewMode} 
             onOpenEvent={handleOpenEvent}
+            animation={animation}
           />
         );
       
@@ -134,6 +183,7 @@ export default function IftarApp() {
             viewMode={viewMode} 
             onOpenEvent={handleOpenEvent}
             onRespond={handleRespond}
+            animation={animation}
           />
         );
       
@@ -154,7 +204,11 @@ export default function IftarApp() {
         return <CalendarView events={[...events, ...invites]} />;
       
       case 'profile':
-        return <ProfileView onSignOut={() => setIsLoggedIn(false)} />;
+        return <ProfileView 
+          onSignOut={() => setIsLoggedIn(false)} 
+          eventsCount={events.length}
+          invitesCount={invites.length}
+        />;
       
       default:
         return null;
@@ -195,8 +249,11 @@ export default function IftarApp() {
         isOpen={selectedEvent !== null} 
         onClose={handleCloseEvent} 
         onShare={() => {
-          setSelectedEvent(null);
-          setShowShareModal(true);
+          handleOpenShareModal();
+        }}
+        onInvite={(email) => {
+          // Handle invite functionality here
+          console.log(`Invited ${email} to event ${selectedEvent?.id}`);
         }}
         onRespond={handleRespond}
       />
@@ -204,7 +261,8 @@ export default function IftarApp() {
       <ShareModal 
         event={selectedEvent} 
         isOpen={showShareModal} 
-        onClose={() => setShowShareModal(false)} 
+        onClose={handleCloseShareModal}
+        shareLink={getShareLink(selectedEvent)}
         onPreviewPublic={handleViewPublicEvent}
       />
       
@@ -227,7 +285,7 @@ export default function IftarApp() {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -239,4 +297,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 16,
   },
-}); 
+});
+
+export default function App() {
+  return <IftarApp />;
+} 

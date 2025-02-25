@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
-import { Copy, Share2, ExternalLink } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Platform, SafeAreaView, Share } from 'react-native';
+import { Share2, Copy, Check, ExternalLink } from 'lucide-react-native';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import * as Clipboard from 'expo-clipboard';
@@ -9,152 +9,200 @@ import * as Clipboard from 'expo-clipboard';
  * ShareModal component for sharing event links
  */
 const ShareModal = ({ 
-  event, 
   isOpen, 
   onClose, 
-  onPreviewPublic 
+  event,
+  shareLink,
+  onPreviewPublic
 }) => {
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [copied, setCopied] = useState(false);
   
-  const shareLink = event ? `https://iftar-app.example.com/event/${event.shareCode}` : '';
-  
-  // Reset copy status after 2 seconds
-  useEffect(() => {
-    if (linkCopied) {
+  // Reset copied status after 2 seconds
+  React.useEffect(() => {
+    if (copied) {
       const timer = setTimeout(() => {
-        setLinkCopied(false);
+        setCopied(false);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [linkCopied]);
+  }, [copied]);
 
-  // Handle copy link to clipboard
+  if (!event) return null;
+
+  // Handle native share
+  const handleNativeShare = async () => {
+    try {
+      await Share.share({
+        message: `Join me for Iftar: ${event.title} on ${event.date} at ${event.location}. ${shareLink}`,
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share the event');
+    }
+    onClose();
+  };
+
+  // Handle copy link
   const handleCopyLink = async () => {
-    if (shareLink) {
-      try {
-        await Clipboard.setStringAsync(shareLink);
-        setLinkCopied(true);
-      } catch (error) {
-        console.error('Failed to copy link:', error);
-      }
+    try {
+      await Clipboard.setStringAsync(shareLink);
+      setCopied(true);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to copy link');
     }
   };
-  
-  if (!event) return null;
-  
+
+  // Handle preview public view
+  const handlePreviewPublic = () => {
+    if (onPreviewPublic) {
+      onPreviewPublic(event);
+      onClose();
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Share this Event</Text>
-        
-        <Text style={styles.description}>
-          Anyone with this link can view the event details. 
-          {event.isPublic ? ' They can also RSVP after logging in.' : ''}
-        </Text>
-        
-        <View style={styles.linkContainer}>
-          <TextInput
-            value={shareLink}
-            editable={false}
-            style={styles.linkInput}
-          />
-          <Button 
-            variant="secondary"
-            icon={<Copy size={16} color={linkCopied ? '#16a34a' : '#6b7280'} />}
-            onPress={handleCopyLink}
-            style={linkCopied ? styles.copyButtonSuccess : styles.copyButton}
-          >
-            {linkCopied ? 'Copied!' : 'Copy'}
-          </Button>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.iconContainer}>
+            <Share2 size={28} color="#3b82f6" />
+          </View>
+          
+          <Text style={styles.title}>Share this Iftar event</Text>
+          <Text style={styles.description}>
+            Invite friends and family to join you for this iftar gathering
+          </Text>
+          
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkLabel}>Event Link:</Text>
+            <View style={styles.linkRow}>
+              <TextInput
+                style={styles.linkInput}
+                value={shareLink}
+                editable={false}
+                selectTextOnFocus
+              />
+              <TouchableOpacity
+                style={[styles.copyButton, copied ? styles.copyButtonSuccess : {}]}
+                onPress={handleCopyLink}
+              >
+                {copied ? (
+                  <Check size={18} color="#ffffff" />
+                ) : (
+                  <Copy size={18} color="#ffffff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <View style={styles.buttonContainer}>
+            <Button
+              variant="secondary"
+              icon={<Share2 size={18} color="#6b7280" />}
+              onPress={handleNativeShare}
+              style={styles.actionButton}
+            >
+              Share with Friends
+            </Button>
+            
+            <Button
+              variant="primary"
+              icon={<ExternalLink size={18} color="white" />}
+              onPress={handlePreviewPublic}
+              style={styles.actionButton}
+            >
+              Preview Public View
+            </Button>
+          </View>
+          
+          <Text style={styles.hint}>
+            {copied ? '✓ Link copied to clipboard!' : 'Tap to copy the link or share directly'}
+          </Text>
         </View>
-        
-        <Text style={styles.infoText}>
-          People who receive this link will need to log in to respond to the invitation.
-        </Text>
-        
-        <View style={styles.actionButtons}>
-          <Button 
-            variant="secondary"
-            icon={<Share2 size={16} color="#6b7280" />}
-            onPress={() => {
-              // Here you would implement native sharing
-              // Like using Share.share() from react-native
-            }}
-            style={styles.shareButton}
-          >
-            Share via Message
-          </Button>
-          <Button 
-            variant="primary"
-            icon={<ExternalLink size={16} color="white" />}
-            onPress={() => {
-              onPreviewPublic?.(event);
-              onClose();
-            }}
-            style={styles.previewButton}
-          >
-            Preview Public View
-          </Button>
-        </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     padding: 24,
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#dbeafe',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 16,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   description: {
-    color: '#4b5563',
-    fontSize: 15,
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    backgroundColor: '#f9fafb',
-    paddingHorizontal: 12,
-    marginBottom: 16,
-  },
-  linkInput: {
-    flex: 1,
-    color: '#4b5563',
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  copyButton: {
-    marginLeft: 8,
-  },
-  copyButtonSuccess: {
-    marginLeft: 8,
-    backgroundColor: '#dcfce7',
-    borderColor: '#86efac',
-  },
-  infoText: {
     fontSize: 14,
     color: '#6b7280',
     marginBottom: 24,
+    textAlign: 'center',
   },
-  actionButtons: {
+  linkContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  linkLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4b5563',
+    marginBottom: 8,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linkInput: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 6,
+    padding: Platform.OS === 'ios' ? 12 : 10,
+    color: '#4b5563',
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    fontSize: 14,
+  },
+  copyButton: {
+    backgroundColor: '#3b82f6',
+    padding: 12,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copyButtonSuccess: {
+    backgroundColor: '#10b981',
+  },
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
   },
-  shareButton: {
+  actionButton: {
     flex: 0.48,
   },
-  previewButton: {
-    flex: 0.48,
+  hint: {
+    fontSize: 12,
+    color:  '#6b7280',
+    textAlign: 'center',
   },
 });
 

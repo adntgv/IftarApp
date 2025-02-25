@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ImageBackground, Animated, Platform, SafeAreaView } from 'react-native';
 import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check } from 'lucide-react-native';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import * as Linking from 'expo-linking';
 
 /**
  * PublicEventView component for publicly sharing events
@@ -15,6 +16,33 @@ const PublicEventView = ({
   onLogin, 
   onRespond 
 }) => {
+  // Add moon float animation
+  const [floatAnim] = React.useState(new Animated.Value(0));
+  
+  React.useEffect(() => {
+    // Create a floating animation for the moon
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+  
+  // Transform the floating animation to a Y translation
+  const moonTranslateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -15],
+  });
+
   if (!isOpen || !event) return null;
 
   // Calculate days until event
@@ -26,158 +54,178 @@ const PublicEventView = ({
   // Calculate sunset time (example)
   const sunsetTime = "18:23";
   
+  // Function to open maps app
+  const openMaps = () => {
+    const location = encodeURIComponent(event.location);
+    const mapsUrl = `https://maps.google.com/?q=${location}`;
+    Linking.openURL(mapsUrl).catch(err => console.error('An error occurred', err));
+  };
+  
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Header background */}
-        <View style={styles.headerBackground}>
-          {/* Moon animation - simplified for this example */}
-          <View style={styles.moonAnimation} />
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          {/* Header background */}
+          <View style={styles.headerBackground}>
+            {/* Animated moon */}
+            <Animated.View 
+              style={[
+                styles.moonContainer, 
+                { transform: [{ translateY: moonTranslateY }] }
+              ]}
+            >
+              <View style={styles.moon} />
+              <View style={styles.moonShadow} />
+            </Animated.View>
+            
+            <View style={styles.closeButtonContainer}>
+              <Button 
+                variant="secondary" 
+                icon={<X size={20} color="#1f2937" />}
+                onPress={onClose}
+                style={styles.closeButton}
+              />
+            </View>
+          </View>
           
-          <View style={styles.closeButtonContainer}>
-            <Button 
-              variant="secondary" 
-              icon={<X size={20} color="#1f2937" />}
-              onPress={onClose}
-              style={styles.closeButton}
-            />
-          </View>
-        </View>
-        
-        {/* Event title section */}
-        <View style={styles.titleContainer}>
-          <View style={styles.titleCard}>
-            <Text style={styles.title}>{event.title}</Text>
-            <Text style={styles.host}>Hosted by {event.host}</Text>
-            
-            <View style={styles.statsGrid}>
-              <View style={styles.statBox}>
-                <Text style={styles.statLabel}>Days Until Iftar</Text>
-                <Text style={styles.statValue}>{diffDays}</Text>
-              </View>
-              <View style={[styles.statBox, { backgroundColor: '#f3e8ff' }]}>
-                <Text style={styles.statLabel}>Sunset</Text>
-                <Text style={[styles.statValue, { color: '#9333ea' }]}>{sunsetTime}</Text>
-              </View>
-              <View style={[styles.statBox, { backgroundColor: '#ecfdf5' }]}>
-                <Text style={styles.statLabel}>Attending</Text>
-                <Text style={[styles.statValue, { color: '#16a34a' }]}>
-                  {event.attendees 
-                    ? event.attendees.filter(a => a.status === 'confirmed').length 
-                    : 0}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-        
-        {/* Event details */}
-        <View style={styles.detailsContainer}>
-          <Card style={styles.detailsCard} borderColor="#3b82f6">
-            <View style={styles.detailsHeader}>
-              <Info size={18} color="#3b82f6" style={styles.detailsIcon} />
-              <Text style={styles.detailsTitle}>Event Details</Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Calendar size={20} color="#6b7280" style={styles.detailIcon} />
-              <View>
-                <Text style={styles.detailLabel}>Date & Time</Text>
-                <Text style={styles.detailText}>{event.date} at {event.time}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <MapPin size={20} color="#6b7280" style={styles.detailIcon} />
-              <View>
-                <Text style={styles.detailLabel}>Location</Text>
-                <Text style={styles.detailText}>{event.location}</Text>
-                <Button 
-                  variant="link" 
-                  icon={<ExternalLink size={14} color="#3b82f6" />}
-                >
-                  View on Maps
-                </Button>
-              </View>
-            </View>
-            
-            {event.description && (
-              <View style={styles.detailRow}>
-                <Edit size={20} color="#6b7280" style={styles.detailIcon} />
-                <View>
-                  <Text style={styles.detailLabel}>Description</Text>
-                  <Text style={styles.detailText}>{event.description}</Text>
-                </View>
-              </View>
-            )}
-          </Card>
-        </View>
-        
-        {/* Host information and RSVP */}
-        <View style={styles.hostContainer}>
-          <Card style={styles.hostCard}>
-            <View style={styles.hostHeader}>
-              <Text style={styles.hostHeaderText}>About the Host</Text>
-            </View>
-            
-            <View style={styles.hostInfo}>
-              <View style={styles.hostAvatar}>
-                <User size={24} color="#3b82f6" />
-              </View>
-              <View>
-                <Text style={styles.hostName}>{event.host}</Text>
-                <Text style={styles.hostRole}>Event Organizer</Text>
-              </View>
-            </View>
-            
-            <View style={styles.rsvpContainer}>
-              <Text style={styles.rsvpText}>
-                Would you like to attend this iftar event?
-              </Text>
+          {/* Event title section */}
+          <View style={styles.titleContainer}>
+            <View style={styles.titleCard}>
+              <Text style={styles.title}>{event.title}</Text>
+              <Text style={styles.host}>Hosted by {event.host}</Text>
               
-              {isLoggedIn ? (
-                <View style={styles.rsvpButtons}>
+              {/* Add the countdown widgets */}
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Days Until Iftar</Text>
+                  <Text style={styles.statValueDays}>{diffDays}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Sunset</Text>
+                  <Text style={styles.statValueSunset}>{sunsetTime}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Attending</Text>
+                  <Text style={styles.statValueAttending}>
+                    {event.attendees 
+                      ? event.attendees.filter(a => a.status === 'confirmed').length 
+                      : 0}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          
+          {/* Event details */}
+          <View style={styles.detailsContainer}>
+            <Card style={styles.detailsCard} borderColor="#3b82f6">
+              <View style={styles.detailsHeader}>
+                <Info size={18} color="#3b82f6" style={styles.detailsIcon} />
+                <Text style={styles.detailsTitle}>Event Details</Text>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Calendar size={20} color="#6b7280" style={styles.detailIcon} />
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Date & Time</Text>
+                  <Text style={styles.detailText}>{event.date} at {event.time}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.infoRow}>
+                <MapPin size={20} color="#6b7280" style={styles.infoIcon} />
+                <View style={styles.detailContent}>
+                  <Text style={styles.infoLabel}>Location</Text>
+                  <Text style={styles.infoValue}>{event.location}</Text>
                   <Button 
-                    variant="success" 
-                    icon={<Check size={18} color="white" />}
-                    onPress={() => {
-                      if (event.status) {
-                        onRespond(event.id, 'confirmed');
-                      }
-                      onClose();
-                    }}
-                    style={styles.rsvpButton}
+                    variant="link" 
+                    icon={<ExternalLink size={14} color="#2563eb" />}
+                    onPress={openMaps}
+                    style={styles.mapLink}
                   >
-                    I'll Attend
-                  </Button>
-                  <Button 
-                    variant="danger" 
-                    icon={<X size={18} color="white" />}
-                    onPress={() => {
-                      if (event.status) {
-                        onRespond(event.id, 'declined');
-                      }
-                      onClose();
-                    }}
-                    style={styles.rsvpButton}
-                  >
-                    I Can't Attend
+                    View on Maps
                   </Button>
                 </View>
-              ) : (
-                <Button 
-                  variant="primary" 
-                  icon={<LogIn size={18} color="white" />}
-                  onPress={onLogin}
-                  style={styles.signInButton}
-                >
-                  Sign in to RSVP
-                </Button>
+              </View>
+              
+              {event.description && (
+                <View style={styles.detailRow}>
+                  <Edit size={20} color="#6b7280" style={styles.detailIcon} />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>Description</Text>
+                    <Text style={styles.detailText}>{event.description}</Text>
+                  </View>
+                </View>
               )}
-            </View>
-          </Card>
-        </View>
-      </ScrollView>
+            </Card>
+          </View>
+          
+          {/* Host information and RSVP */}
+          <View style={styles.hostContainer}>
+            <Card style={styles.hostCard}>
+              <View style={styles.hostHeader}>
+                <Text style={styles.hostHeaderText}>About the Host</Text>
+              </View>
+              
+              <View style={styles.hostInfo}>
+                <View style={styles.hostAvatar}>
+                  <User size={24} color="#3b82f6" />
+                </View>
+                <View>
+                  <Text style={styles.hostName}>{event.host}</Text>
+                  <Text style={styles.hostRole}>Event Organizer</Text>
+                </View>
+              </View>
+              
+              <View style={styles.rsvpContainer}>
+                <Text style={styles.rsvpText}>
+                  Would you like to attend this iftar event?
+                </Text>
+                
+                {isLoggedIn ? (
+                  <View style={styles.rsvpButtons}>
+                    <Button 
+                      variant="success" 
+                      icon={<Check size={18} color="white" />}
+                      onPress={() => {
+                        if (event.status) {
+                          onRespond(event.id, 'confirmed');
+                        }
+                        onClose();
+                      }}
+                      style={styles.rsvpButton}
+                    >
+                      I'll Attend
+                    </Button>
+                    <Button 
+                      variant="danger" 
+                      icon={<X size={18} color="white" />}
+                      onPress={() => {
+                        if (event.status) {
+                          onRespond(event.id, 'declined');
+                        }
+                        onClose();
+                      }}
+                      style={styles.rsvpButton}
+                    >
+                      I Can't Attend
+                    </Button>
+                  </View>
+                ) : (
+                  <Button 
+                    variant="primary" 
+                    icon={<LogIn size={18} color="white" />}
+                    onPress={onLogin}
+                    style={styles.signInButton}
+                  >
+                    Sign in to RSVP
+                  </Button>
+                )}
+              </View>
+            </Card>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 };
@@ -188,8 +236,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     zIndex: 50,
   },
+  safeArea: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 16, // Extra padding for iOS
   },
   headerBackground: {
     height: 240,
@@ -197,7 +252,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  moonAnimation: {
+  moonContainer: {
     position: 'absolute',
     top: 48,
     right: 48,
@@ -206,10 +261,29 @@ const styles = StyleSheet.create({
     borderRadius: 48,
     backgroundColor: '#fef3c7',
     opacity: 0.9,
+    overflow: 'hidden',
+  },
+  moon: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    borderRadius: 48,
+    backgroundColor: '#fef3c7',
+  },
+  moonShadow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    borderRadius: 48,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   closeButtonContainer: {
     position: 'absolute',
-    top: 16,
+    top: Platform.OS === 'ios' ? 44 : 16,
     left: 16,
     zIndex: 10,
   },
@@ -242,11 +316,11 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 24,
   },
-  statsGrid: {
+  statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  statBox: {
+  statItem: {
     width: '32%',
     backgroundColor: '#eff6ff',
     borderRadius: 8,
@@ -258,10 +332,20 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 4,
   },
-  statValue: {
+  statValueDays: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#3b82f6',
+  },
+  statValueSunset: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#9333ea',
+  },
+  statValueAttending: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#16a34a',
   },
   detailsContainer: {
     paddingHorizontal: 16,
@@ -300,6 +384,9 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 15,
     color: '#4b5563',
+  },
+  detailContent: {
+    flex: 1,
   },
   hostContainer: {
     paddingHorizontal: 16,
@@ -364,6 +451,27 @@ const styles = StyleSheet.create({
   },
   signInButton: {
     minWidth: 160,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginTop: 16,
+  },
+  infoIcon: {
+    marginTop: 2,
+    marginRight: 12,
+  },
+  infoLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 15,
+    color: '#4b5563',
+  },
+  mapLink: {
+    marginTop: 8,
   },
 });
 

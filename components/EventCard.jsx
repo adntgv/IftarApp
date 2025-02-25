@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Calendar, Clock, MapPin, Users, Check, X } from 'lucide-react-native';
 import Card from './ui/Card';
 import Button from './ui/Button';
@@ -7,7 +7,26 @@ import Button from './ui/Button';
 /**
  * EventCard component for displaying event information
  */
-const EventCard = ({ event, isInvite = false, onOpenEvent, onRespond }) => {
+const EventCard = ({ event, isInvite = false, onOpenEvent, onRespond, animate = '' }) => {
+  const [animationValue] = useState(new Animated.Value(1));
+  
+  useEffect(() => {
+    if (animate === 'pulse') {
+      Animated.sequence([
+        Animated.timing(animationValue, {
+          toValue: 1.05,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animationValue, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        })
+      ]).start();
+    }
+  }, [animate, animationValue]);
+
   const borderColor = isInvite 
     ? event.status === 'confirmed' 
       ? '#16a34a' 
@@ -17,69 +36,75 @@ const EventCard = ({ event, isInvite = false, onOpenEvent, onRespond }) => {
     : '#3b82f6';
       
   return (
-    <Card 
-      borderColor={borderColor} 
-      onPress={() => onOpenEvent(event)}
-      style={styles.card}
+    <Animated.View 
+      style={{ 
+        transform: [{ scale: animationValue }],
+      }}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>{event.title}</Text>
-        <Text style={styles.host}>{isInvite ? `Invited by ${event.host}` : 'You host'}</Text>
-      </View>
-      
-      <View style={styles.infoRow}>
-        <Calendar size={16} color="#4b5563" style={styles.icon} />
-        <Text style={styles.infoText}>{event.date}</Text>
-      </View>
-      
-      <View style={styles.infoRow}>
-        <Clock size={16} color="#4b5563" style={styles.icon} />
-        <Text style={styles.infoText}>{event.time}</Text>
-      </View>
-      
-      <View style={styles.infoRow}>
-        <MapPin size={16} color="#4b5563" style={styles.icon} />
-        <Text style={styles.infoText} numberOfLines={1}>{event.location}</Text>
-      </View>
-      
-      {!isInvite && event.attendees && (
+      <Card 
+        borderColor={borderColor} 
+        onPress={() => onOpenEvent(event)}
+        style={styles.card}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>{event.title}</Text>
+          <Text style={styles.host}>{isInvite ? `Invited by ${event.host}` : 'You host'}</Text>
+        </View>
+        
         <View style={styles.infoRow}>
-          <Users size={16} color="#4b5563" style={styles.icon} />
-          <Text style={styles.infoText}>
-            {event.attendees.filter(a => a.status === 'confirmed').length} confirmed
-          </Text>
+          <Calendar size={16} color="#4b5563" style={styles.icon} />
+          <Text style={styles.infoText}>{event.date}</Text>
         </View>
-      )}
-      
-      {isInvite && (
-        <View style={styles.buttonContainer}>
-          <Button 
-            variant={event.status === 'confirmed' ? 'success' : 'secondary'}
-            icon={<Check size={14} color={event.status === 'confirmed' ? 'white' : '#4b5563'} />}
-            onPress={(e) => {
-              // Prevent event propagation
-              e.stopPropagation?.();
-              onRespond(event.id, 'confirmed');
-            }}
-            style={styles.respondButton}
-          >
-            Accept
-          </Button>
-          <Button 
-            variant={event.status === 'declined' ? 'danger' : 'secondary'}
-            icon={<X size={14} color={event.status === 'declined' ? 'white' : '#4b5563'} />}
-            onPress={(e) => {
-              // Prevent event propagation
-              e.stopPropagation?.();
-              onRespond(event.id, 'declined');
-            }}
-            style={styles.respondButton}
-          >
-            Decline
-          </Button>
+        
+        <View style={styles.infoRow}>
+          <Clock size={16} color="#4b5563" style={styles.icon} />
+          <Text style={styles.infoText}>{event.time}</Text>
         </View>
-      )}
-    </Card>
+        
+        <View style={styles.infoRow}>
+          <MapPin size={16} color="#4b5563" style={styles.icon} />
+          <Text style={styles.infoText} numberOfLines={1}>{event.location}</Text>
+        </View>
+        
+        {!isInvite && event.attendees && (
+          <View style={styles.infoRow}>
+            <Users size={16} color="#4b5563" style={styles.icon} />
+            <Text style={styles.infoText}>
+              {event.attendees.filter(a => a.status === 'confirmed').length} confirmed
+            </Text>
+          </View>
+        )}
+        
+        {isInvite && (
+          <View style={styles.buttonContainer}>
+            <Button 
+              variant={event.status === 'confirmed' ? 'success' : 'secondary'}
+              icon={<Check size={14} color={event.status === 'confirmed' ? 'white' : '#4b5563'} />}
+              onPress={(e) => {
+                // Prevent event propagation
+                e.stopPropagation?.();
+                onRespond(event.id, 'confirmed');
+              }}
+              style={styles.respondButton}
+            >
+              Accept
+            </Button>
+            <Button 
+              variant={event.status === 'declined' ? 'danger' : 'secondary'}
+              icon={<X size={14} color={event.status === 'declined' ? 'white' : '#4b5563'} />}
+              onPress={(e) => {
+                // Prevent event propagation
+                e.stopPropagation?.();
+                onRespond(event.id, 'declined');
+              }}
+              style={styles.respondButton}
+            >
+              Decline
+            </Button>
+          </View>
+        )}
+      </Card>
+    </Animated.View>
   );
 };
 
