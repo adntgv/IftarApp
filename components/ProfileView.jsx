@@ -1,17 +1,122 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { User } from 'lucide-react-native';
 import Button from './ui/Button';
-import { userInfo } from '../utils/mockData';
+import { createShadow } from '../utils/styles';
 
 /**
  * ProfileView component for user profile
  */
-const ProfileView = ({ onSignOut }) => {
-  const { name, email, stats } = userInfo;
+const ProfileView = ({ 
+  onSignOut, 
+  userData = null, 
+  accountData = null, 
+  refreshing = false, 
+  onRefresh = () => {} 
+}) => {
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef(null);
+  
+  // Debug log when props change
+  useEffect(() => {
+    console.log('ProfileView props updated:', { 
+      hasUserData: !!userData, 
+      hasAccountData: !!accountData,
+      refreshing 
+    });
+  }, [userData, accountData, refreshing]);
+  
+  // Set a timeout for loading to prevent infinite spinner
+  useEffect(() => {
+    // Clear any existing timeout first
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    // Only set timeout if we're in a loading state
+    if (!userData && !accountData && !refreshing) {
+      console.log('Setting loading timeout');
+      timeoutRef.current = setTimeout(() => {
+        console.log('Loading timeout triggered');
+        setLoadingTimeout(true);
+      }, 10000); // 10 seconds timeout
+    } else {
+      // If we have data or are refreshing, reset timeout flag
+      setLoadingTimeout(false);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [userData, accountData, refreshing]);
+  
+  // Determine what to render
+  if (refreshing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={styles.loadingText}>Refreshing profile...</Text>
+      </View>
+    );
+  }
+  
+  if (!userData && !accountData) {
+    if (loadingTimeout) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Could not load profile</Text>
+          <Text style={styles.errorSubtext}>There was a problem connecting to the server</Text>
+          <Button 
+            variant="primary"
+            onPress={() => {
+              setLoadingTimeout(false);
+              onRefresh();
+            }}
+            style={styles.retryButton}
+          >
+            Retry
+          </Button>
+        </View>
+      );
+    }
+    
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  // If we got here, we have data to display
+  // Extracting user information from userData and accountData
+  const name = userData?.name || accountData?.name || 'User';
+  const email = userData?.email || accountData?.email || '';
+  const userId = userData?.userId || accountData?.$id || '';
+  
+  // Default stats if not available
+  const stats = {
+    hosted: userData?.hostedEventsCount || 0,
+    invites: userData?.invitationsCount || 0
+  };
   
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl 
+          refreshing={refreshing} 
+          onRefresh={onRefresh} 
+          colors={['#3b82f6']}
+          tintColor="#3b82f6"
+        />
+      }
+    >
       <View style={styles.profileCard}>
         <View style={styles.avatarContainer}>
           <User size={32} color="#3b82f6" />
@@ -31,6 +136,14 @@ const ProfileView = ({ onSignOut }) => {
               <Text style={styles.statLabel}>Invitations</Text>
               <Text style={styles.statValue}>{stats.invites}</Text>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.accountInfoContainer}>
+          <Text style={styles.sectionTitle}>Account Information</Text>
+          <View style={styles.accountInfoCard}>
+            <Text style={styles.accountInfoLabel}>User ID</Text>
+            <Text style={styles.accountInfoValue}>{userId || 'Not available'}</Text>
           </View>
         </View>
         
@@ -68,16 +181,42 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  errorText: {
+    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#dc2626',
+  },
+  errorSubtext: {
+    marginBottom: 24,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  retryButton: {
+    marginTop: 8,
+  },
   profileCard: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...createShadow({
+      opacity: 0.1,
+      radius: 4,
+      offsetY: 2,
+      elevation: 2
+    }),
   },
   avatarContainer: {
     width: 80,
@@ -127,6 +266,26 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
+  },
+  accountInfoContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  accountInfoCard: {
+    width: '100%',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#f9fafb',
+    marginBottom: 8,
+  },
+  accountInfoLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  accountInfoValue: {
+    fontSize: 16,
+    color: '#1f2937',
+    fontWeight: '500',
   },
   preferencesContainer: {
     width: '100%',

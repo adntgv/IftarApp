@@ -13,407 +13,398 @@
         }
     ],
     "collections": [
+        {
+            "$id": "users",
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "databaseId": "67be2835003c542ca773",
+            "name": "Users",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
                 {
-                    "databaseId": "67be2835003c542ca773",
-                    "$id": "users",
-                    "name": "Users",
-                    "documentSecurity": true,
-                    "permissions": [
-                        "read(\"user:{{document.userId}}\")",
-                        "update(\"user:{{document.userId}}\")",
-                        "delete(\"user:{{document.userId}}\")"
-                    ],
-                    "attributes": [
-                        {
-                            "key": "userId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "name",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "email",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "profilePicture",
-                            "type": "string",
-                            "status": "available",
-                            "required": false,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "createdAt",
-                            "type": "datetime",
-                            "status": "available",
-                            "required": true,
-                            "array": false
-                        }
-                    ],
-                    "indexes": [
-                        {
-                            "key": "userId_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "userId"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "email_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "email"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        }
-                    ]
+                    "key": "userId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
                 },
                 {
-                    "databaseId": "67be2835003c542ca773",
-                    "$id": "events",
-                    "name": "Events",
-                    "documentSecurity": true,
-                    "permissions": [
-                        "read(\"user:{{document.hostId}}\")",
-                        "update(\"user:{{document.hostId}}\")",
-                        "delete(\"user:{{document.hostId}}\")",
-                        "read(\"role:member\")"
-                    ],
-                    "attributes": [
-                        {
-                            "key": "title",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "date",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "time",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "location",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "description",
-                            "type": "string",
-                            "status": "available",
-                            "required": false,
-                            "array": false,
-                            "size": 10000
-                        },
-                        {
-                            "key": "hostId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "hostName",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "isPublic",
-                            "type": "boolean",
-                            "status": "available",
-                            "required": true,
-                            "array": false
-                        },
-                        {
-                            "key": "shareCode",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "createdAt",
-                            "type": "datetime",
-                            "status": "available",
-                            "required": true,
-                            "array": false
-                        }
-                    ],
-                    "indexes": [
-                        {
-                            "key": "host_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "hostId"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "share_code_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "shareCode"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "date_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "date"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        }
-                    ]
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
                 },
                 {
-                    "databaseId": "67be2835003c542ca773",
-                    "$id": "attendees",
-                    "name": "Attendees",
-                    "documentSecurity": true,
-                    "permissions": [
-                        "read(\"user:{{document.userId}}\")",
-                        "update(\"user:{{document.userId}}\")",
-                        "delete(\"user:{{document.userId}}\")",
-                        "read(\"user:{{document.eventHostId}}\")",
-                        "read(\"role:member\")"
-                    ],
-                    "attributes": [
-                        {
-                            "key": "eventId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "userId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "name",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "status",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "eventHostId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "createdAt",
-                            "type": "datetime",
-                            "status": "available",
-                            "required": true,
-                            "array": false
-                        }
-                    ],
-                    "indexes": [
-                        {
-                            "key": "event_user_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "eventId",
-                                "userId"
-                            ],
-                            "orders": [
-                                "ASC",
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "user_events_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "userId"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "event_attendees_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "eventId"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        }
-                    ]
+                    "key": "email",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
                 },
                 {
-                    "databaseId": "67be2835003c542ca773",
-                    "$id": "invitations",
-                    "name": "Invitations",
-                    "documentSecurity": true,
-                    "permissions": [
-                        "read(\"user:{{document.inviteeId}}\")",
-                        "update(\"user:{{document.inviteeId}}\")",
-                        "delete(\"user:{{document.inviteeId}}\")",
-                        "read(\"user:{{document.inviterId}}\")",
-                        "update(\"user:{{document.inviterId}}\")",
-                        "delete(\"user:{{document.inviterId}}\")"
-                    ],
-                    "attributes": [
-                        {
-                            "key": "eventId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "inviterId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "inviteeId",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "inviteeEmail",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "status",
-                            "type": "string",
-                            "status": "available",
-                            "required": true,
-                            "array": false,
-                            "size": 255
-                        },
-                        {
-                            "key": "createdAt",
-                            "type": "datetime",
-                            "status": "available",
-                            "required": true,
-                            "array": false
-                        }
-                    ],
-                    "indexes": [
-                        {
-                            "key": "invitee_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "inviteeId"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "invitee_email_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "inviteeEmail"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        },
-                        {
-                            "key": "event_index",
-                            "type": "key",
-                            "status": "available",
-                            "attributes": [
-                                "eventId"
-                            ],
-                            "orders": [
-                                "ASC"
-                            ]
-                        }
-                    ]
+                    "key": "profilePicture",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
                 }
             ],
+            "indexes": [
+                {
+                    "key": "userId_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "userId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "email_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "email"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "events",
+            "$permissions": [],
+            "databaseId": "67be2835003c542ca773",
+            "name": "Events",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "title",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "date",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "time",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "location",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "description",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 10000,
+                    "default": null
+                },
+                {
+                    "key": "hostId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "hostName",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "isPublic",
+                    "type": "boolean",
+                    "required": true,
+                    "array": false,
+                    "default": null
+                },
+                {
+                    "key": "shareCode",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "host_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "hostId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "share_code_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "shareCode"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "date_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "date"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "attendees",
+            "$permissions": [],
+            "databaseId": "67be2835003c542ca773",
+            "name": "Attendees",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "eventId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "eventHostId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "event_user_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "eventId",
+                        "userId"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "user_events_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "userId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "event_attendees_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "eventId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "invitations",
+            "$permissions": [],
+            "databaseId": "67be2835003c542ca773",
+            "name": "Invitations",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "eventId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "inviterId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "inviteeId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "inviteeEmail",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "format": "",
+                    "default": null
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "invitee_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "inviteeId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "invitee_email_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "inviteeEmail"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "event_index",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "eventId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        }
+    ],
     "settings": {
         "services": {
             "account": true,

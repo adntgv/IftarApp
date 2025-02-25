@@ -3,6 +3,7 @@ import { View, StyleSheet, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { initialEvents, initialInvites, generateShareCode } from '../utils/mockData';
 import * as Clipboard from 'expo-clipboard';
+import { Redirect } from 'expo-router';
 
 // Import components
 import Header from '../components/Header';
@@ -299,6 +300,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function App() {
-  return <IftarApp />;
+export default function Index() {
+  // Redirect to the tabs home screen
+  return <Redirect href="/(tabs)" />;
 } 

@@ -151,15 +151,23 @@ const useAuthStore = create(
         
         // Prevent checking more than once every 5 seconds
         if (now - lastCheck < 5000) {
+          console.log('Skipping session check - checked recently');
           return get().account ? { account: get().account, user: get().user } : null;
         }
         
         set({ isLoading: true, error: null, lastSessionCheck: now });
+        console.log('Starting session check in useAuth');
         
         try {
           const result = await getCurrentUser();
+          console.log('Session check result:', { 
+            success: !!result, 
+            hasAccount: !!result?.account, 
+            hasUser: !!result?.user 
+          });
           
           if (result && result.account) {
+            // Make sure we're updating the state with the latest data
             set({ 
               user: result.user, 
               account: result.account, 
@@ -167,8 +175,10 @@ const useAuthStore = create(
               isAuthenticated: true,
               error: null
             });
+            console.log('Auth state updated with user data');
             return result;
           } else {
+            // Clear user data if no valid session
             set({ 
               user: null, 
               account: null, 
@@ -176,10 +186,12 @@ const useAuthStore = create(
               isAuthenticated: false,
               error: null
             });
+            console.log('No valid session found, cleared auth state');
             return null;
           }
         } catch (error) {
           console.warn('Session check failed:', error);
+          // Important: Make sure to set isLoading to false to prevent infinite loading
           set({ 
             user: null,
             account: null,
@@ -187,6 +199,7 @@ const useAuthStore = create(
             isLoading: false, 
             isAuthenticated: false 
           });
+          console.log('Auth state cleared due to error');
           return null;
         }
       },

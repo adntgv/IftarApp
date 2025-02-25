@@ -1,74 +1,145 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import Header from '@/components/Header';
+import EventList from '@/components/EventList';
+import EventDetails from '@/components/EventDetails';
+import ShareModal from '@/components/ShareModal';
+import PublicEventView from '@/components/PublicEventView';
+import { initialEvents, generateShareCode } from '@/utils/mockData';
+import { Event } from '@/types/event';
+import { EventLike } from '@/types/event';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [events, setEvents] = useState<Event[]>(initialEvents);
+  const [viewMode, setViewMode] = useState('card');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showPublicView, setShowPublicView] = useState(false);
+  const [publicViewEvent, setPublicViewEvent] = useState<Event | null>(null);
+  const [animation, setAnimation] = useState('');
+  
+  // Animation effect
+  useEffect(() => {
+    if (animation) {
+      const timer = setTimeout(() => {
+        setAnimation('');
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [animation]);
+
+  // Toggle view mode between card and list
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'card' ? 'list' : 'card');
+    setAnimation('toggle');
+  };
+
+  // Open event details
+  const handleOpenEvent = (event: EventLike) => {
+    setSelectedEvent(event as Event);
+    setAnimation('open');
+  };
+
+  // Close event details
+  const handleCloseEvent = () => {
+    setSelectedEvent(null);
+  };
+
+  // Open share modal
+  const handleOpenShareModal = () => {
+    setShowShareModal(true);
+  };
+
+  // Close share modal
+  const handleCloseShareModal = () => {
+    setShowShareModal(false);
+  };
+
+  // Generate share link for an event
+  const getShareLink = (event: Event | null) => {
+    if (!event) return '';
+    return `https://iftar-app.example.com/event/${event.shareCode}`;
+  };
+
+  // View public event
+  const handleViewPublicEvent = (event: EventLike) => {
+    setPublicViewEvent(event as Event);
+    setShowPublicView(true);
+    handleCloseShareModal();
+    setSelectedEvent(null);
+  };
+
+  // Placeholder for respond function (required by EventDetails)
+  const handleRespond = (id: number, status: string) => {
+    console.log(`Responding to event ${id} with status ${status}`);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={styles.container}>
+      <Header 
+        title="Your Iftar Events" 
+        action={toggleViewMode}
+        actionLabel={viewMode === 'card' ? 'List View' : 'Card View'}
+      />
+      
+      <View style={styles.content}>
+        <EventList 
+          events={events} 
+          viewMode={viewMode} 
+          onOpenEvent={handleOpenEvent}
+          onRespond={handleRespond}
+          animation={animation}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </View>
+
+      {/* Modals */}
+      <EventDetails 
+        event={selectedEvent} 
+        isOpen={selectedEvent !== null} 
+        onClose={handleCloseEvent} 
+        onShare={() => {
+          handleOpenShareModal();
+        }}
+        onInvite={(email: string) => {
+          // Handle invite functionality here
+          if (selectedEvent) {
+            console.log(`Invited ${email} to event ${selectedEvent.id}`);
+          }
+        }}
+        onRespond={handleRespond}
+      />
+      
+      <ShareModal 
+        event={selectedEvent} 
+        isOpen={showShareModal} 
+        onClose={handleCloseShareModal}
+        shareLink={getShareLink(selectedEvent)}
+        onPreviewPublic={handleViewPublicEvent}
+      />
+      
+      <PublicEventView 
+        event={publicViewEvent} 
+        isOpen={showPublicView} 
+        onClose={() => setShowPublicView(false)} 
+        isLoggedIn={true}
+        onLogin={() => {}}
+        onRespond={handleRespond}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  content: {
+    flex: 1,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
 });

@@ -137,27 +137,81 @@ export const logout = async () => {
 
 export const getCurrentUser = async () => {
   try {
-    const currentAccount = await account.get();
+    console.log('Getting current user...');
+    
+    // Add a timeout promise to prevent hanging
+    const getAccountPromise = account.get();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 10000)
+    );
+    
+    // Race the account fetch against a timeout
+    const currentAccount = await Promise.race([getAccountPromise, timeoutPromise]);
+    console.log('Account retrieved successfully');
     
     // If we get here, we have a valid account session
     // Now get the user document from database
     try {
-      const userDocs = await databases.listDocuments(
+      console.log('Retrieving user document for ID:', currentAccount.$id);
+      const listDocsPromise = databases.listDocuments(
         ENV.DATABASE_ID,
         USERS_COLLECTION_ID,
         [Query.equal('userId', currentAccount.$id)]
       );
       
+      // Race the database query against a timeout
+      const userDocs = await Promise.race([
+        listDocsPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 10000))
+      ]);
+      
       if (userDocs.documents.length === 0) {
-        console.warn('User document not found in database');
-        return { account: currentAccount, user: null };
+        console.warn('User document not found in database, creating a new one');
+        
+        // Create a new user document
+        try {
+          const newUser = await databases.createDocument(
+            ENV.DATABASE_ID,
+            USERS_COLLECTION_ID,
+            ID.unique(),
+            {
+              userId: currentAccount.$id,
+              email: currentAccount.email,
+              name: currentAccount.name || 'User',
+              createdAt: new Date().toISOString()
+            }
+          );
+          console.log('Created new user document:', newUser.$id);
+          return { account: currentAccount, user: newUser };
+        } catch (createError) {
+          console.error('Error creating user document:', createError);
+          // Fall back to returning just the account info, which should be enough for basic profile display
+          return { 
+            account: currentAccount, 
+            user: {
+              name: currentAccount.name || 'User',
+              email: currentAccount.email,
+              userId: currentAccount.$id,
+              createdAt: currentAccount.registration
+            } 
+          };
+        }
       }
       
+      console.log('User document retrieved successfully');
       return { account: currentAccount, user: userDocs.documents[0] };
     } catch (dbError) {
       console.error('Error retrieving user document:', dbError);
-      // Return account but no user document
-      return { account: currentAccount, user: null };
+      // Return account info as a fallback user object
+      return { 
+        account: currentAccount, 
+        user: {
+          name: currentAccount.name || 'User',
+          email: currentAccount.email,
+          userId: currentAccount.$id,
+          createdAt: currentAccount.registration
+        } 
+      };
     }
   } catch (error) {
     // This will catch 401 Unauthorized errors when not logged in
