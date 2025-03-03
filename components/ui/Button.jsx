@@ -224,21 +224,24 @@ const Button = ({
           { transform: [{ scale: scaleValue }] }
         ]}
       >
-        {icon && iconPosition === 'left' && (
-          <View style={styles.iconLeft}>
-            {icon}
-          </View>
-        )}
-        
-        {title && <Text style={textStyles}>{title}</Text>}
-        
-        {icon && iconPosition === 'right' && (
-          <View style={styles.iconRight}>
-            {icon}
-          </View>
-        )}
-        
-        {icon && !title && <View>{icon}</View>}
+        {icon && (title ? (
+          <>
+            {iconPosition === 'left' && (
+              <View style={styles.iconLeft}>
+                {icon}
+              </View>
+            )}
+            <Text style={textStyles}>{title}</Text>
+            {iconPosition === 'right' && (
+              <View style={styles.iconRight}>
+                {icon}
+              </View>
+            )}
+          </>
+        ) : (
+          <View>{icon}</View>
+        ))}
+        {children}
       </Animated.View>
     </Pressable>
   );
