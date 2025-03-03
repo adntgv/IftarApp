@@ -115,7 +115,14 @@ export default function HomeScreen() {
   // Generate share link for an event
   const getShareLink = (event: Event | null) => {
     if (!event) return '';
-    return `${process.env.EXPO_PUBLIC_APP_URL || 'https://iftar-app.example.com'}/event/${event.shareCode}`;
+    
+    // Get the base URL from environment variables or use the current domain
+    const appUrl = process.env.EXPO_PUBLIC_APP_URL || 
+      (typeof window !== 'undefined' ? 
+        `${window.location.protocol}//${window.location.host}` : 
+        'https://iftar-app.example.com');
+    
+    return `${appUrl}/event/${event.shareCode}`;
   };
 
   // View public event

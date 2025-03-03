@@ -136,22 +136,17 @@ const IftarApp = () => {
     setShowLogin(false);
   };
 
-  // Copy share link
-  const handleCopyLink = async (shareCode) => {
-    const shareLink = `https://iftar-app.example.com/event/${shareCode}`;
-    await Clipboard.setStringAsync(shareLink);
-    setLinkCopied(true);
-    
-    // Reset copied state after timeout
-    setTimeout(() => {
-      setLinkCopied(false);
-    }, 2000);
-  };
-
   // Generate share link for an event
   const getShareLink = (event) => {
     if (!event) return '';
-    return `https://iftar-app.example.com/event/${event.shareCode}`;
+    
+    // Get the base URL from environment variables or use the current domain
+    const appUrl = process.env.EXPO_PUBLIC_APP_URL || 
+      (typeof window !== 'undefined' ? 
+        `${window.location.protocol}//${window.location.host}` : 
+        'https://iftar-app.example.com');
+    
+    return `${appUrl}/event/${event.shareCode}`;
   };
 
   // View public event
