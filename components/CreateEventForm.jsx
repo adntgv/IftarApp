@@ -82,18 +82,16 @@ const CreateEventForm = ({
           variant="secondary"
           onPress={onCancel}
           style={styles.cancelButton}
-        >
-          Cancel
-        </Button>
+          title="Cancel"
+        />
         <Button 
           variant="primary"
           icon={<Check size={18} color="white" />}
           onPress={onSubmit}
           disabled={!newEvent.title || !newEvent.date || !newEvent.time || !newEvent.location}
           style={styles.createButton}
-        >
-          Create Event
-        </Button>
+          title="Create Event"
+        />
       </View>
     </View>
   );

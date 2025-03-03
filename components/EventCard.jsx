@@ -159,7 +159,7 @@ const EventCard = ({
                   styles.acceptButton,
                   { backgroundColor: colors.success }
                 ]}
-                onPress={() => onRespond(event.id, 'confirmed')}
+                onPress={() => onRespond(event.$id, 'confirmed')}
               >
                 <Check size={20} color="#FFFFFF" />
               </TouchableOpacity>
@@ -169,7 +169,7 @@ const EventCard = ({
                   styles.declineButton,
                   { backgroundColor: colors.error }
                 ]}
-                onPress={() => onRespond(event.id, 'declined')}
+                onPress={() => onRespond(event.$id, 'declined')}
               >
                 <X size={20} color="#FFFFFF" />
               </TouchableOpacity>

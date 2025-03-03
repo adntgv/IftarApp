@@ -4,22 +4,28 @@
 
 // Attendee type definition
 export type Attendee = {
-  id: number;
+  $id: string;
+  userId: string;
   name: string;
   status: string;
+  eventId: string;
+  eventHostId: string;
+  createdAt: string;
 };
 
 // Base event type with common properties
 export type BaseEvent = {
-  id: number;
+  $id: string;
   title: string;
   date: string;
   time: string;
   location: string;
-  host: string;
+  hostId: string;
+  hostName: string;
   description: string;
   isPublic: boolean;
   shareCode: string;
+  createdAt: string;
 };
 
 // Event type with attendees
@@ -27,11 +33,17 @@ export type Event = BaseEvent & {
   attendees: Attendee[];
 };
 
-// Invite type with status
-export type Invite = BaseEvent & {
+// Invitation type 
+export type Invitation = {
+  $id: string;
+  eventId: string;
+  inviterId: string;
+  inviteeId: string;
+  inviteeEmail: string;
   status: string;
-  attendees?: Attendee[];
+  createdAt: string;
+  event?: BaseEvent;
 };
 
 // Union type for any event-like object
-export type EventLike = Event | Invite; 
+export type EventLike = Event | Invitation; 

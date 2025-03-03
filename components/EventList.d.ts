@@ -7,7 +7,7 @@ declare const EventList: FC<{
   isInvites?: boolean;
   viewMode?: string;
   onOpenEvent: (event: EventLike) => void;
-  onRespond: (id: number, status: string) => void;
+  onRespond: (id: string, status: string) => void;
   animation?: string;
 }>;
 

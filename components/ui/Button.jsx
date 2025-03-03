@@ -241,7 +241,11 @@ const Button = ({
         ) : (
           <View>{icon}</View>
         ))}
-        {children}
+        {typeof children === 'string' ? (
+          <Text style={textStyles}>{children}</Text>
+        ) : (
+          children
+        )}
       </Animated.View>
     </Pressable>
   );

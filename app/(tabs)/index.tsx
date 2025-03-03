@@ -7,35 +7,38 @@ import EventList from '@/components/EventList';
 import EventDetails from '@/components/EventDetails';
 import ShareModal from '@/components/ShareModal';
 import PublicEventView from '@/components/PublicEventView';
-import { initialEvents, generateShareCode } from '@/utils/mockData';
+import useEventsStore from '@/hooks/useEvents';
+import useAuthStore from '@/hooks/useAuth';
 import { Event } from '@/types/event';
 import { EventLike } from '@/types/event';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [events, setEvents] = useState<Event[]>(initialEvents);
-  const [viewMode, setViewMode] = useState('card');
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const { 
+    events, 
+    selectedEvent,
+    viewMode, 
+    animation,
+    fetchUserEvents,
+    toggleViewMode,
+    setSelectedEvent,
+    setAnimation,
+    inviteToEvent,
+    respondToInvitation
+  } = useEventsStore();
+  
+  const { isLoggedIn } = useAuthStore();
+  
   const [showShareModal, setShowShareModal] = useState(false);
   const [showPublicView, setShowPublicView] = useState(false);
   const [publicViewEvent, setPublicViewEvent] = useState<Event | null>(null);
-  const [animation, setAnimation] = useState('');
   
-  // Animation effect
+  // Fetch user events on mount
   useEffect(() => {
-    if (animation) {
-      const timer = setTimeout(() => {
-        setAnimation('');
-      }, 500);
-      return () => clearTimeout(timer);
+    if (isLoggedIn) {
+      fetchUserEvents();
     }
-  }, [animation]);
-
-  // Toggle view mode between card and list
-  const toggleViewMode = () => {
-    setViewMode(viewMode === 'card' ? 'list' : 'card');
-    setAnimation('toggle');
-  };
+  }, [isLoggedIn, fetchUserEvents]);
 
   // Open event details
   const handleOpenEvent = (event: EventLike) => {
@@ -61,7 +64,7 @@ export default function HomeScreen() {
   // Generate share link for an event
   const getShareLink = (event: Event | null) => {
     if (!event) return '';
-    return `https://iftar-app.example.com/event/${event.shareCode}`;
+    return `${process.env.EXPO_PUBLIC_APP_URL || 'https://iftar-app.example.com'}/event/${event.shareCode}`;
   };
 
   // View public event
@@ -72,9 +75,29 @@ export default function HomeScreen() {
     setSelectedEvent(null);
   };
 
-  // Placeholder for respond function (required by EventDetails)
-  const handleRespond = (id: number, status: string) => {
-    console.log(`Responding to event ${id} with status ${status}`);
+  // Handle inviting a user to an event
+  const handleInvite = async (eventId: string, email: string) => {
+    try {
+      await inviteToEvent(eventId, email);
+      return true;
+    } catch (error) {
+      console.error('Error inviting user:', error);
+      return false;
+    }
+  };
+
+  // Handle responding to an event
+  const handleRespond = async (id: string, status: string) => {
+    if (!selectedEvent) return;
+    
+    try {
+      await respondToInvitation(
+        { $id: id, eventId: selectedEvent.$id },
+        status
+      );
+    } catch (error) {
+      console.error('Error responding to event:', error);
+    }
   };
 
   return (
@@ -102,7 +125,7 @@ export default function HomeScreen() {
         onClose={handleCloseEvent}
         onRespond={handleRespond}
         onShare={handleOpenShareModal}
-        onInvite={() => {}}
+        onInvite={(email) => selectedEvent && handleInvite(selectedEvent.$id, email)}
       />
       
       <ShareModal 
@@ -116,10 +139,11 @@ export default function HomeScreen() {
       
       <PublicEventView 
         event={publicViewEvent} 
-        isOpen={showPublicView} 
+        isOpen={showPublicView}
+        isVisible={showPublicView}
         onClose={() => setShowPublicView(false)} 
-        isLoggedIn={true}
-        onLogin={() => {}}
+        isLoggedIn={isLoggedIn}
+        onLogin={() => router.push('/login')}
         onRespond={handleRespond}
       />
     </View>

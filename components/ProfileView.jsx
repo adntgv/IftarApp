@@ -151,15 +151,15 @@ const ProfileView = ({
           <Text style={styles.sectionTitle}>Preferences</Text>
           <View style={styles.preferenceItem}>
             <Text style={styles.preferenceLabel}>Notification Settings</Text>
-            <Button variant="link">Edit</Button>
+            <Button variant="link" title="Edit" />
           </View>
           <View style={styles.preferenceItem}>
             <Text style={styles.preferenceLabel}>Theme Options</Text>
-            <Button variant="link">Edit</Button>
+            <Button variant="link" title="Edit" />
           </View>
           <View style={styles.preferenceItem}>
             <Text style={styles.preferenceLabel}>Language</Text>
-            <Button variant="link">Edit</Button>
+            <Button variant="link" title="Edit" />
           </View>
         </View>
         

@@ -9,7 +9,7 @@ declare const EventDetails: FC<{
   onClose: () => void;
   onShare: () => void;
   onInvite: (email: string) => void;
-  onRespond: (id: number, status: string) => void;
+  onRespond: (id: string, status: string) => void;
 }>;
 
 export default EventDetails; 

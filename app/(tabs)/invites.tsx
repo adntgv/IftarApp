@@ -6,38 +6,43 @@ import Header from '@/components/Header';
 import EventList from '@/components/EventList';
 import EventDetails from '@/components/EventDetails';
 import LoginModal from '@/components/LoginModal';
-import { initialInvites } from '@/utils/mockData';
-import { Invite } from '@/types/event';
+import useEventsStore from '@/hooks/useEvents';
+import useAuthStore from '@/hooks/useAuth';
+import { Event, Invitation } from '@/types/event';
 import { EventLike } from '@/types/event';
 
 export default function InvitesScreen() {
   const router = useRouter();
-  const [invites, setInvites] = useState<Invite[]>(initialInvites);
-  const [viewMode, setViewMode] = useState('card');
-  const [selectedEvent, setSelectedEvent] = useState<Invite | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [animation, setAnimation] = useState('');
+  const { 
+    invitations, 
+    viewMode, 
+    animation, 
+    fetchUserInvitations,
+    toggleViewMode,
+    setAnimation,
+    respondToInvitation
+  } = useEventsStore();
   
-  // Animation effect
+  const { isLoggedIn, login } = useAuthStore();
+
+  const [selectedEvent, setSelectedEvent] = useState<Invitation | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
+  
+  // Fetch user invitations on mount
   useEffect(() => {
-    if (animation) {
-      const timer = setTimeout(() => {
-        setAnimation('');
-      }, 500);
-      return () => clearTimeout(timer);
+    if (isLoggedIn) {
+      fetchUserInvitations();
     }
-  }, [animation]);
+  }, [isLoggedIn, fetchUserInvitations]);
 
   // Toggle view mode between card and list
-  const toggleViewMode = () => {
-    setViewMode(viewMode === 'card' ? 'list' : 'card');
-    setAnimation('toggle');
+  const handleToggleViewMode = () => {
+    toggleViewMode();
   };
 
   // Open event details
   const handleOpenEvent = (event: EventLike) => {
-    setSelectedEvent(event as Invite);
+    setSelectedEvent(event as Invitation);
     setAnimation('open');
   };
 
@@ -47,41 +52,47 @@ export default function InvitesScreen() {
   };
 
   // Respond to invitation
-  const handleRespond = (id: number, status: string) => {
+  const handleRespond = async (id: string, status: string) => {
     if (!isLoggedIn) {
       setShowLogin(true);
       return;
     }
     
-    const updatedInvites = invites.map(invite => 
-      invite.id === id ? { ...invite, status } : invite
-    );
-    setInvites(updatedInvites);
-    setAnimation('respond');
+    if (!selectedEvent) return;
+    
+    try {
+      await respondToInvitation(selectedEvent, status);
+    } catch (error) {
+      console.error('Error responding to invitation:', error);
+    }
   };
 
   // Handle login
-  const handleLogin = () => {
-    // In a real app, validate credentials here
-    setIsLoggedIn(true);
-    setShowLogin(false);
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      await login(email, password);
+      setShowLogin(false);
+    } catch (error) {
+      console.error('Error logging in:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Header 
         title="Your Invitations" 
-        action={() => toggleViewMode()}
+        action={handleToggleViewMode}
         actionLabel={viewMode === 'card' ? 'List View' : 'Card View'}
       />
       
       <View style={styles.content}>
         <EventList 
-          events={invites} 
+          events={invitations} 
           isInvites={true}
           viewMode={viewMode} 
           onOpenEvent={handleOpenEvent}
           onRespond={handleRespond}
+          animation={animation}
         />
       </View>
 
