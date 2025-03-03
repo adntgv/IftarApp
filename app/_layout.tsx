@@ -3,12 +3,19 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { AuthProvider } from '../context/AuthContext';
 import { ErrorProvider } from '../context/ErrorContext';
+import { LogBox } from 'react-native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 import { useEffect } from 'react';
 import { SplashScreen } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as NavigationBar from 'expo-navigation-bar';
+
+// Ignore specific warnings
+LogBox.ignoreLogs([
+  'Unexpected text node',  // Ignore the text node error which might be from dev tools
+  'A text node cannot be a child of a <View>',
+]);
 
 /**
  * Root layout component

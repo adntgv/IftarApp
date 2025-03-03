@@ -38,13 +38,21 @@ export default function HomeScreen() {
   
   // Fetch all user data on mount
   const fetchAllUserData = async () => {
-    if (!isLoggedIn) return;
+    // Get current state directly from the store
+    const authState = useAuthStore.getState();
+    console.log(`Fetching data with auth state: isLoggedIn=${authState.isLoggedIn}, isAuthenticated=${authState.isAuthenticated}`);
+    
+    if (!authState.isLoggedIn) {
+      console.log('Not fetching data - user not logged in');
+      return;
+    }
     
     try {
       await Promise.all([
         fetchUserEvents(),
         fetchUserInvitations()
       ]);
+      console.log('Data fetched successfully');
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
@@ -52,23 +60,26 @@ export default function HomeScreen() {
 
   // Fetch user events on mount
   useEffect(() => {
-    if (isLoggedIn) {
+    const authState = useAuthStore.getState();
+    if (authState.isLoggedIn) {
       fetchAllUserData();
     }
-  }, [isLoggedIn]);
+  }, []);
 
   // Refresh events when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      if (isLoggedIn) {
+      const authState = useAuthStore.getState();
+      if (authState.isLoggedIn) {
         fetchAllUserData();
       }
-    }, [isLoggedIn])
+    }, [])
   );
 
   // Handle pull-to-refresh
   const handleRefresh = async () => {
-    if (!isLoggedIn) return;
+    const authState = useAuthStore.getState();
+    if (!authState.isLoggedIn) return;
     
     setRefreshing(true);
     try {

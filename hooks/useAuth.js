@@ -76,11 +76,7 @@ const useAuthStore = create(
       isLoading: false,
       error: null,
       isAuthenticated: false,
-      
-      // Add isLoggedIn getter that returns isAuthenticated state
-      get isLoggedIn() {
-        return get().isAuthenticated;
-      },
+      isLoggedIn: false,
 
       // Add a variable to track last check time
       lastSessionCheck: 0,
@@ -94,14 +90,16 @@ const useAuthStore = create(
             user: result.user, 
             account: result.account, 
             isLoading: false, 
-            isAuthenticated: true 
+            isAuthenticated: true,
+            isLoggedIn: true
           });
           return result;
         } catch (error) {
           set({ 
             error: error.message, 
             isLoading: false, 
-            isAuthenticated: false 
+            isAuthenticated: false,
+            isLoggedIn: false
           });
           throw error;
         }
@@ -116,14 +114,16 @@ const useAuthStore = create(
             user: result.user, 
             account: result.account, 
             isLoading: false, 
-            isAuthenticated: true 
+            isAuthenticated: true,
+            isLoggedIn: true
           });
           return result;
         } catch (error) {
           set({ 
             error: error.message, 
             isLoading: false, 
-            isAuthenticated: false 
+            isAuthenticated: false,
+            isLoggedIn: false
           });
           throw error;
         }
@@ -138,7 +138,8 @@ const useAuthStore = create(
             user: null, 
             account: null, 
             isLoading: false, 
-            isAuthenticated: false 
+            isAuthenticated: false,
+            isLoggedIn: false
           });
         } catch (error) {
           set({ 
@@ -178,9 +179,12 @@ const useAuthStore = create(
               account: result.account, 
               isLoading: false, 
               isAuthenticated: true,
+              isLoggedIn: true,
               error: null
             });
             console.log('Auth state updated with user data');
+            // Debug line to check isLoggedIn
+            console.log(`isLoggedIn is ${get().isLoggedIn}`);
             return result;
           } else {
             // Clear user data if no valid session
@@ -189,6 +193,7 @@ const useAuthStore = create(
               account: null, 
               isLoading: false, 
               isAuthenticated: false,
+              isLoggedIn: false,
               error: null
             });
             console.log('No valid session found, cleared auth state');
@@ -202,7 +207,8 @@ const useAuthStore = create(
             account: null,
             error: error.message || 'Authentication failed', 
             isLoading: false, 
-            isAuthenticated: false 
+            isAuthenticated: false,
+            isLoggedIn: false
           });
           console.log('Auth state cleared due to error');
           return null;

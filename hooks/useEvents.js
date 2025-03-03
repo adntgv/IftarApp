@@ -54,7 +54,10 @@ const useEventsStore = create((set, get) => ({
   // Fetch user events (events you host)
   fetchUserEvents: async () => {
     const { user } = useAuthStore.getState();
-    if (!user) return;
+    if (!user) {
+      console.log('No user found');
+      return;
+    };
 
     set({ isLoading: true, error: null });
     try {
