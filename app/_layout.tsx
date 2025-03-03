@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '../components/ThemeProvider';
 
@@ -16,18 +15,11 @@ import * as NavigationBar from 'expo-navigation-bar';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   // Set navigation bar color for Android
   useEffect(() => {
-    if (colorScheme === 'dark') {
-      NavigationBar.setBackgroundColorAsync('#141414');
-      NavigationBar.setButtonStyleAsync('light');
-    } else {
-      NavigationBar.setBackgroundColorAsync('#ffffff');
-      NavigationBar.setButtonStyleAsync('dark');
-    }
-  }, [colorScheme]);
+    NavigationBar.setBackgroundColorAsync('#ffffff');
+    NavigationBar.setButtonStyleAsync('dark');
+  }, []);
 
   // Check if onboarded
   useEffect(() => {
@@ -47,12 +39,12 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: colorScheme === 'dark' ? '#141414' : '#ffffff',
+            backgroundColor: '#ffffff',
           },
           animation: 'slide_from_right',
         }}

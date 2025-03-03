@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useContext, useState } from 'react';
 import { Colors } from '../constants/Colors';
 import Typography from '../constants/Typography';
 import Spacing from '../constants/Spacing';
@@ -24,36 +23,13 @@ export const useTheme = () => {
  * Provides theme values to all child components
  */
 export const ThemeProvider = ({ children }) => {
-  // Get system color scheme
-  const colorScheme = useColorScheme();
-  const [theme, setTheme] = useState({
-    colorScheme: colorScheme || 'light',
-    colors: Colors[colorScheme || 'light'],
+  const [theme] = useState({
+    colorScheme: 'light',
+    colors: Colors.light,
     typography: Typography,
     spacing: Spacing,
     animations: Animations,
   });
-  
-  // Update theme when system color scheme changes
-  useEffect(() => {
-    setTheme(prevTheme => ({
-      ...prevTheme,
-      colorScheme: colorScheme || 'light',
-      colors: Colors[colorScheme || 'light'],
-    }));
-  }, [colorScheme]);
-  
-  // Toggle dark/light mode manually
-  const toggleTheme = () => {
-    setTheme(prevTheme => {
-      const newColorScheme = prevTheme.colorScheme === 'dark' ? 'light' : 'dark';
-      return {
-        ...prevTheme,
-        colorScheme: newColorScheme,
-        colors: Colors[newColorScheme],
-      };
-    });
-  };
   
   // Global styles based on the current theme
   const globalStyles = {
@@ -123,7 +99,6 @@ export const ThemeProvider = ({ children }) => {
   
   const value = {
     theme,
-    toggleTheme,
     globalStyles,
   };
   

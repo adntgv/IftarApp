@@ -10,52 +10,52 @@
 
 // Primary brand colors
 const primary = {
-  50: '#e6f7ff',
-  100: '#bae7ff',
-  200: '#91d5ff',
-  300: '#69c0ff',
-  400: '#40a9ff',
-  500: '#1890ff', // Primary color
-  600: '#096dd9',
-  700: '#0050b3',
-  800: '#003a8c',
-  900: '#002766',
+  50: '#e8f4ff',
+  100: '#d1e9ff',
+  200: '#a3d3ff',
+  300: '#75bcff',
+  400: '#47a6ff',
+  500: '#1a90ff', // Primary color
+  600: '#0066cc',
+  700: '#004d99',
+  800: '#003366',
+  900: '#001a33',
 };
 
 // Accent colors for highlights and call-to-actions
 const accent = {
-  50: '#fff2e8',
-  100: '#ffd8b8',
-  200: '#ffbb96',
-  300: '#ff9c6e',
-  400: '#ff7a45',
-  500: '#fa541c', // Accent color
-  600: '#d4380d',
-  700: '#ad2102',
-  800: '#871400',
-  900: '#610b00',
+  50: '#fff5e6',
+  100: '#ffe0b3',
+  200: '#ffcc80',
+  300: '#ffb84d',
+  400: '#ffa31a',
+  500: '#ff8c00', // Accent color
+  600: '#cc7000',
+  700: '#995400',
+  800: '#663800',
+  900: '#331c00',
 };
 
 // Semantic colors for status indications
 const semantic = {
-  success: '#52c41a',
-  warning: '#faad14',
-  error: '#f5222d',
-  info: '#1890ff',
+  success: '#2ecc71',
+  warning: '#f1c40f',
+  error: '#e74c3c',
+  info: '#3498db',
 };
 
 // Grayscale for text, backgrounds, borders
 const gray = {
-  50: '#fafafa',
-  100: '#f5f5f5',
-  200: '#e8e8e8',
-  300: '#d9d9d9',
-  400: '#bfbfbf',
-  500: '#8c8c8c',
-  600: '#595959',
-  700: '#434343',
-  800: '#262626',
-  900: '#141414',
+  50: '#ffffff',
+  100: '#f8f9fa',
+  200: '#e9ecef',
+  300: '#dee2e6',
+  400: '#ced4da',
+  500: '#adb5bd',
+  600: '#6c757d',
+  700: '#495057',
+  800: '#343a40',
+  900: '#212529',
 };
 
 export const Colors = {
@@ -76,16 +76,16 @@ export const Colors = {
     borderLight: gray[100],
     borderDark: gray[300],
     divider: gray[200],
-    icon: gray[500],
+    icon: gray[600],
     iconSelected: primary[500],
     tint: primary[500],
-    tabIconDefault: gray[500],
+    tabIconDefault: gray[600],
     tabIconSelected: primary[500],
     success: semantic.success,
     warning: semantic.warning,
     error: semantic.error,
     info: semantic.info,
-    cardShadow: 'rgba(0, 0, 0, 0.05)',
+    cardShadow: 'rgba(0, 0, 0, 0.1)',
   },
   dark: {
     text: gray[100],
