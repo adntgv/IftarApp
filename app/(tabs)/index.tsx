@@ -21,6 +21,7 @@ export default function HomeScreen() {
     animation,
     isLoading,
     fetchUserEvents,
+    fetchUserInvitations,
     toggleViewMode,
     setSelectedEvent,
     setAnimation,
@@ -35,10 +36,24 @@ export default function HomeScreen() {
   const [publicViewEvent, setPublicViewEvent] = useState<Event | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   
+  // Fetch all user data on mount
+  const fetchAllUserData = async () => {
+    if (!isLoggedIn) return;
+    
+    try {
+      await Promise.all([
+        fetchUserEvents(),
+        fetchUserInvitations()
+      ]);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
   // Fetch user events on mount
   useEffect(() => {
     if (isLoggedIn) {
-      fetchUserEvents();
+      fetchAllUserData();
     }
   }, [isLoggedIn]);
 
@@ -46,7 +61,7 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       if (isLoggedIn) {
-        fetchUserEvents();
+        fetchAllUserData();
       }
     }, [isLoggedIn])
   );
@@ -57,7 +72,7 @@ export default function HomeScreen() {
     
     setRefreshing(true);
     try {
-      await fetchUserEvents();
+      await fetchAllUserData();
     } catch (error) {
       console.error('Error refreshing events:', error);
     } finally {

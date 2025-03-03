@@ -9,6 +9,8 @@ declare const EventList: FC<{
   onOpenEvent: (event: EventLike) => void;
   onRespond: (id: string, status: string) => void;
   animation?: string;
+  onRefresh?: () => Promise<void>;
+  refreshing?: boolean;
 }>;
 
 export default EventList; 

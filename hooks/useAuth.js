@@ -76,6 +76,11 @@ const useAuthStore = create(
       isLoading: false,
       error: null,
       isAuthenticated: false,
+      
+      // Add isLoggedIn getter that returns isAuthenticated state
+      get isLoggedIn() {
+        return get().isAuthenticated;
+      },
 
       // Add a variable to track last check time
       lastSessionCheck: 0,

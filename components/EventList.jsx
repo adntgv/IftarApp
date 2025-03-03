@@ -23,7 +23,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
  * @param {Function} props.onOpenEvent - Function to call when an event is opened
  * @param {Function} props.onRespond - Function to call when responding to an invitation
  * @param {Function} props.onRefresh - Function to call when the list is pulled to refresh
- * @param {boolean} props.isRefreshing - Whether the list is currently refreshing
+ * @param {boolean} props.refreshing - Whether the list is currently refreshing
  * @param {string} props.emptyMessage - Optional message to display when the list is empty
  * @param {Component} props.ListHeaderComponent - Optional component to display at the top of the list
  * @param {string} props.viewMode - The view mode (card or list)
@@ -35,7 +35,7 @@ const EventList = ({
   onOpenEvent, 
   onRespond,
   onRefresh,
-  isRefreshing = false,
+  refreshing = false,
   emptyMessage,
   ListHeaderComponent,
   viewMode = 'card',
@@ -93,7 +93,7 @@ const EventList = ({
   // Empty list component
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
-      {isRefreshing ? (
+      {refreshing ? (
         <ActivityIndicator size="large" color={colors.primary} />
       ) : (
         <>
@@ -154,7 +154,7 @@ const EventList = ({
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing}
+          refreshing={refreshing}
           onRefresh={onRefresh}
           colors={[colors.primary]}
           tintColor={colors.primary}
