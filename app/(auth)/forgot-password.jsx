@@ -63,15 +63,21 @@ const ForgotPasswordScreen = () => {
         <Text style={styles.subheading}>Enter your email address and we'll send you instructions to reset your password</Text>
         
         {error && (
-          <View style={styles.errorContainer}><Text style={styles.errorText}>{error}</Text></View>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
         )}
         
         {validationError && (
-          <View style={styles.errorContainer}><Text style={styles.errorText}>{validationError}</Text></View>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{validationError}</Text>
+          </View>
         )}
         
         {message && (
-          <View style={styles.messageContainer}><Text style={styles.messageText}>{message}</Text></View>
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText}>{message}</Text>
+          </View>
         )}
         
         <View style={styles.formContainer}>

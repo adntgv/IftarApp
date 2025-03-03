@@ -74,7 +74,9 @@ const LoginScreen = () => {
         <Text style={styles.subheading}>Sign in to continue planning your Iftar events</Text>
         
         {(error || validationError) && (
-          <View style={styles.errorContainer}><Text style={styles.errorText}>{error || validationError}</Text></View>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error || validationError}</Text>
+          </View>
         )}
         
         <View style={styles.formContainer}>
@@ -116,7 +118,8 @@ const LoginScreen = () => {
           />
         </View>
         
-        <View style={styles.signupContainer}><Text style={styles.signupText}>Don't have an account?</Text>
+        <View style={styles.signupContainer}>
+          <Text style={styles.signupText}>Don't have an account?</Text>
           <Button
             variant="link"
             title="Sign up"

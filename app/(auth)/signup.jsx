@@ -81,7 +81,9 @@ const SignupScreen = () => {
         <Text style={styles.subheading}>Join the community to plan and share Iftar events</Text>
         
         {(error || validationError) && (
-          <View style={styles.errorContainer}><Text style={styles.errorText}>{error || validationError}</Text></View>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error || validationError}</Text>
+          </View>
         )}
         
         <View style={styles.formContainer}>
@@ -127,9 +129,11 @@ const SignupScreen = () => {
             autoCapitalize="none"
           />
           
-          <View style={styles.termsContainer}><Text style={styles.termsText}>
+          <View style={styles.termsContainer}>
+            <Text style={styles.termsText}>
               By creating an account, you agree to our Terms of Service and Privacy Policy
-            </Text></View>
+            </Text>
+          </View>
           
           <Button
             title="Sign Up"
@@ -140,7 +144,8 @@ const SignupScreen = () => {
           />
         </View>
         
-        <View style={styles.loginContainer}><Text style={styles.loginText}>Already have an account?</Text>
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Already have an account?</Text>
           <TouchableOpacity onPress={goToLogin}>
             <Text style={styles.loginLink}>Sign In</Text>
           </TouchableOpacity>

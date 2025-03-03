@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { AuthProvider } from '../context/AuthContext';
+import { ErrorProvider } from '../context/ErrorContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 import { useEffect } from 'react';
@@ -41,20 +42,22 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: '#ffffff',
-            },
-            animation: 'slide_from_right',
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
+        <ErrorProvider>
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: '#ffffff',
+              },
+              animation: 'slide_from_right',
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          </Stack>
+        </ErrorProvider>
       </ThemeProvider>
     </AuthProvider>
   );
