@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import Header from '@/components/Header';
 import EventList from '@/components/EventList';
@@ -17,6 +17,7 @@ export default function InvitesScreen() {
     invitations, 
     viewMode, 
     animation, 
+    isLoading,
     fetchUserInvitations,
     toggleViewMode,
     setAnimation,
@@ -27,13 +28,37 @@ export default function InvitesScreen() {
 
   const [selectedEvent, setSelectedEvent] = useState<Invitation | null>(null);
   const [showLogin, setShowLogin] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   // Fetch user invitations on mount
   useEffect(() => {
     if (isLoggedIn) {
       fetchUserInvitations();
     }
-  }, [isLoggedIn, fetchUserInvitations]);
+  }, [isLoggedIn]);
+
+  // Refresh invitations when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isLoggedIn) {
+        fetchUserInvitations();
+      }
+    }, [isLoggedIn])
+  );
+
+  // Handle pull-to-refresh
+  const handleRefresh = async () => {
+    if (!isLoggedIn) return;
+    
+    setRefreshing(true);
+    try {
+      await fetchUserInvitations();
+    } catch (error) {
+      console.error('Error refreshing invitations:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Toggle view mode between card and list
   const handleToggleViewMode = () => {
@@ -93,6 +118,8 @@ export default function InvitesScreen() {
           onOpenEvent={handleOpenEvent}
           onRespond={handleRespond}
           animation={animation}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
         />
       </View>
 

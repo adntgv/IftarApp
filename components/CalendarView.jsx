@@ -1,12 +1,24 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import Button from './ui/Button';
+import { useTheme } from './ThemeProvider';
 
 /**
  * CalendarView component for displaying the calendar
+ * @param {Object} props
+ * @param {Array} props.events - List of events to display
+ * @param {boolean} props.refreshing - Whether the calendar is currently refreshing
+ * @param {Function} props.onRefresh - Function to call when the calendar is pulled to refresh
  */
-const CalendarView = ({ events = [] }) => {
+const CalendarView = ({ 
+  events = [],
+  refreshing = false,
+  onRefresh = () => {}
+}) => {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  
   // Calendar days of the week
   const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   
@@ -17,7 +29,17 @@ const CalendarView = ({ events = [] }) => {
   const eventDays = [1, 5, 10]; // March 1, 5, 10 from mock
   
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[colors?.primary || '#3b82f6']}
+          tintColor={colors?.primary || '#3b82f6'}
+        />
+      }
+    >
       <View style={styles.calendarCard}>
         <View style={styles.header}>
           <Button variant="icon" icon={<ChevronLeft size={20} color="#6b7280" />} />

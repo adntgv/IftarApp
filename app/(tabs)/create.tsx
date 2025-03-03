@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import CreateEventForm from '@/components/CreateEventForm';
 import { createEvent } from '@/utils/eventService';
 import { useAuth } from '../../context/AuthContext';
+import useEventsStore from '@/hooks/useEvents';
 
 // Define user type to fix TypeScript errors
 interface User {
@@ -17,6 +18,7 @@ interface User {
 
 export default function CreateScreen() {
   const { user, isAuthenticated } = useAuth();
+  const { fetchUserEvents } = useEventsStore();
   const [loading, setLoading] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -68,7 +70,7 @@ export default function CreateScreen() {
       
       console.log('Event created successfully:', event);
       
-      // Reset form and navigate back to home
+      // Reset form
       setNewEvent({
         title: "",
         date: "",
@@ -77,6 +79,9 @@ export default function CreateScreen() {
         description: "",
         isPublic: true
       });
+      
+      // Fetch updated events to refresh the list
+      await fetchUserEvents();
       
       // Navigate to home tab
       router.navigate('/(tabs)');

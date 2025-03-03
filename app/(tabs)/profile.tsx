@@ -1,19 +1,20 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, RefreshControl, Text } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import ProfileView from '@/components/ProfileView';
 import useAuthStore from '@/hooks/useAuth';
+import useEventsStore from '@/hooks/useEvents';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
-import { initialEvents, initialInvites } from '@/utils/mockData';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout, user, account, checkSession, isLoading, error } = useAuthStore();
+  const { events, invitations, fetchUserEvents, fetchUserInvitations } = useEventsStore();
   const [refreshing, setRefreshing] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const eventsCount = initialEvents.length;
-  const invitesCount = initialInvites.length;
+  const eventsCount = events.length;
+  const invitesCount = invitations.length;
 
   // Check auth status when component mounts
   useEffect(() => {
@@ -23,6 +24,9 @@ export default function ProfileScreen() {
         if (!result) {
           // No valid session found, redirect to auth
           router.replace('/(auth)/login');
+        } else {
+          // Fetch events data
+          await fetchEvents();
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -32,6 +36,25 @@ export default function ProfileScreen() {
 
     checkAuth();
   }, []);
+  
+  // Refresh events when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchEvents();
+    }, [])
+  );
+  
+  // Fetch both events and invitations
+  const fetchEvents = async () => {
+    try {
+      await Promise.all([
+        fetchUserEvents(),
+        fetchUserInvitations()
+      ]);
+    } catch (error) {
+      console.error('Error fetching events for profile:', error);
+    }
+  };
 
   // Refresh user data with timeout
   const refreshUserData = async () => {
@@ -46,17 +69,25 @@ export default function ProfileScreen() {
         setTimeout(() => reject(new Error('Session check timed out')), 15000)
       );
       
-      const result = await Promise.race([
+      const sessionCheckPromise = Promise.race([
         checkSession(),
         timeoutPromise
       ]);
       
-      if (!result) {
+      // Fetch events data in parallel with session check
+      const refreshPromises = [
+        sessionCheckPromise,
+        fetchEvents()
+      ];
+      
+      const [sessionResult] = await Promise.all(refreshPromises);
+      
+      if (!sessionResult) {
         // Session is no longer valid
         router.replace('/(auth)/login');
       }
       
-      console.log('Session check completed');
+      console.log('Profile refresh completed');
     } catch (error) {
       console.error('Failed to refresh user data:', error);
       setSessionError(error instanceof Error ? error.message : 'Unknown error');

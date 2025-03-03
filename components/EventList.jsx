@@ -17,6 +17,17 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /**
  * Enhanced EventList component with animations and improved styling
+ * @param {Object} props
+ * @param {Array} props.events - List of events to display
+ * @param {boolean} props.isInvites - Whether this is an invites list
+ * @param {Function} props.onOpenEvent - Function to call when an event is opened
+ * @param {Function} props.onRespond - Function to call when responding to an invitation
+ * @param {Function} props.onRefresh - Function to call when the list is pulled to refresh
+ * @param {boolean} props.isRefreshing - Whether the list is currently refreshing
+ * @param {string} props.emptyMessage - Optional message to display when the list is empty
+ * @param {Component} props.ListHeaderComponent - Optional component to display at the top of the list
+ * @param {string} props.viewMode - The view mode (card or list)
+ * @param {string} props.animation - Animation type to play
  */
 const EventList = ({ 
   events = [], 
@@ -27,6 +38,8 @@ const EventList = ({
   isRefreshing = false,
   emptyMessage,
   ListHeaderComponent,
+  viewMode = 'card',
+  animation = '',
 }) => {
   const { theme } = useTheme();
   const { colors, typography, spacing, animations } = theme;
@@ -126,7 +139,14 @@ const EventList = ({
     <FlatList
       data={animatedEvents}
       renderItem={renderItem}
-      keyExtractor={(item) => item.id.toString()}
+      keyExtractor={(item, index) => {
+        // Use $id (Appwrite document ID) if available
+        if (item.$id) return item.$id;
+        // Fall back to id if available
+        if (item.id) return item.id.toString();
+        // Last resort: use index as key
+        return `event-${index}`;
+      }}
       contentContainerStyle={[
         styles.container, 
         { padding: spacing.layout.screenPadding }
