@@ -11,6 +11,9 @@ export const EVENTS_COLLECTION_ID = 'events';
 export const ATTENDEES_COLLECTION_ID = 'attendees';
 export const INVITATIONS_COLLECTION_ID = 'invitations';
 
+// Export ID and Query for use in other files
+export { ID, Query };
+
 // Initialize client
 client
   .setEndpoint(ENV.APPWRITE_ENDPOINT)

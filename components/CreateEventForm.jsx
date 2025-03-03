@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch, ActivityIndicator } from 'react-native';
 import { Check } from 'lucide-react-native';
 import Input from './ui/Input';
 import Button from './ui/Button';
@@ -11,7 +11,8 @@ const CreateEventForm = ({
   newEvent, 
   onChangeEvent, 
   onSubmit, 
-  onCancel 
+  onCancel,
+  loading = false
 }) => {
   // Handle input changes
   const handleChange = (field, value) => {
@@ -28,6 +29,7 @@ const CreateEventForm = ({
         onChangeText={(text) => handleChange('title', text)}
         placeholder="Family Iftar Dinner"
         required
+        editable={!loading}
       />
       
       <View style={styles.dateTimeContainer}>
@@ -38,6 +40,7 @@ const CreateEventForm = ({
           onChangeText={(text) => handleChange('date', text)}
           required
           style={styles.dateInput}
+          editable={!loading}
         />
         <Input
           label="Time"
@@ -46,6 +49,7 @@ const CreateEventForm = ({
           onChangeText={(text) => handleChange('time', text)}
           required
           style={styles.timeInput}
+          editable={!loading}
         />
       </View>
       
@@ -55,6 +59,7 @@ const CreateEventForm = ({
         onChangeText={(text) => handleChange('location', text)}
         placeholder="123 Main Street"
         required
+        editable={!loading}
       />
       
       <Input
@@ -63,6 +68,7 @@ const CreateEventForm = ({
         value={newEvent.description}
         onChangeText={(text) => handleChange('description', text)}
         placeholder="Join us for a special iftar meal..."
+        editable={!loading}
       />
       
       <View style={styles.switchContainer}>
@@ -71,6 +77,7 @@ const CreateEventForm = ({
           onValueChange={(value) => handleChange('isPublic', value)}
           trackColor={{ false: '#d1d5db', true: '#bfdbfe' }}
           thumbColor={newEvent.isPublic ? '#3b82f6' : '#f4f4f5'}
+          disabled={loading}
         />
         <Text style={styles.switchLabel}>
           Make event publicly viewable (anyone with the link can see details)
@@ -83,14 +90,15 @@ const CreateEventForm = ({
           onPress={onCancel}
           style={styles.cancelButton}
           title="Cancel"
+          disabled={loading}
         />
         <Button 
           variant="primary"
-          icon={<Check size={18} color="white" />}
+          icon={loading ? <ActivityIndicator size="small" color="white" /> : <Check size={18} color="white" />}
           onPress={onSubmit}
-          disabled={!newEvent.title || !newEvent.date || !newEvent.time || !newEvent.location}
+          disabled={loading || !newEvent.title || !newEvent.date || !newEvent.time || !newEvent.location}
           style={styles.createButton}
-          title="Create Event"
+          title={loading ? "Creating..." : "Create Event"}
         />
       </View>
     </View>
