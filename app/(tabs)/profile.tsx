@@ -15,32 +15,26 @@ export default function ProfileScreen() {
   const eventsCount = initialEvents.length;
   const invitesCount = initialInvites.length;
 
-  // Only run once when component mounts with empty dependency array
+  // Check auth status when component mounts
   useEffect(() => {
-    console.log('ProfileScreen mounted, fetching user data...');
-    // Initial data load without setting state
-    const initialLoad = async () => {
+    const checkAuth = async () => {
       try {
-        await checkSession();
+        const result = await checkSession();
+        if (!result) {
+          // No valid session found, redirect to auth
+          router.replace('/(auth)/login');
+        }
       } catch (error) {
-        console.error('Initial data load failed:', error);
+        console.error('Auth check failed:', error);
+        router.replace('/(auth)/login');
       }
     };
-    initialLoad();
-    // Empty dependency array ensures this only runs once
-  }, []);
 
-  // Reduce logging frequency to prevent unnecessary rerenders
-  // Only log significant changes, not on every render
-  useEffect(() => {
-    if (error) {
-      console.log('Auth error detected:', error);
-    }
-  }, [error]);
+    checkAuth();
+  }, []);
 
   // Refresh user data with timeout
   const refreshUserData = async () => {
-    // Only proceed if not already refreshing
     if (refreshing) return;
     
     try {
@@ -48,21 +42,26 @@ export default function ProfileScreen() {
       setRefreshing(true);
       setSessionError(null);
       
-      // Add a timeout to prevent hanging
       const timeoutPromise = new Promise<null>((_, reject) => 
         setTimeout(() => reject(new Error('Session check timed out')), 15000)
       );
       
-      // Race between the actual session check and the timeout
       const result = await Promise.race([
         checkSession(),
         timeoutPromise
       ]);
       
+      if (!result) {
+        // Session is no longer valid
+        router.replace('/(auth)/login');
+      }
+      
       console.log('Session check completed');
     } catch (error) {
       console.error('Failed to refresh user data:', error);
       setSessionError(error instanceof Error ? error.message : 'Unknown error');
+      // Redirect to login if session is invalid
+      router.replace('/(auth)/login');
     } finally {
       setRefreshing(false);
     }
@@ -74,10 +73,25 @@ export default function ProfileScreen() {
       router.replace('/(auth)/login');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Still redirect to login even if logout fails
+      router.replace('/(auth)/login');
     }
   };
 
-  // Remove excessive logging to reduce render cycles
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Header title="Profile" action={null} actionLabel="" />
+        <View style={styles.content}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading profile...</Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen
@@ -86,11 +100,7 @@ export default function ProfileScreen() {
           headerShown: true,
         }}
       />
-      <Header 
-        title="Profile"
-        action={null}
-        actionLabel=""
-      />
+      <Header title="Profile" action={null} actionLabel="" />
       <View style={styles.content}>
         <ProfileView 
           onSignOut={handleSignOut}
@@ -107,11 +117,18 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#fff',
   },
   content: {
     flex: 1,
-    paddingTop: 16,
-    paddingBottom: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6b7280',
   },
 }); 

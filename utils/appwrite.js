@@ -76,18 +76,34 @@ export const createAccount = async (email, password, name) => {
 
 export const login = async (email, password) => {
   try {
-    // Try to delete any existing session first to prevent the 
-    // "Creation of a session is prohibited when a session is active" error
+    console.log('Attempting login for:', email);
+    
+    // First, try to delete any existing sessions
     try {
-      await account.deleteSession('current');
+      const sessions = await account.listSessions();
+      console.log('Current sessions:', sessions);
+      
+      // Delete all existing sessions
+      for (const session of sessions.sessions) {
+        try {
+          await account.deleteSession(session.$id);
+          console.log('Deleted session:', session.$id);
+        } catch (deleteError) {
+          console.warn('Error deleting session:', deleteError);
+        }
+      }
     } catch (sessionError) {
-      // It's okay if there's no session to delete
-      console.log('No existing session to delete');
+      console.log('No existing sessions to delete');
     }
     
     // Now create a new session
-    await account.createEmailSession(email, password);
+    console.log('Creating new session...');
+    const session = await account.createEmailSession(email, password);
+    console.log('Session created:', session);
+    
+    // Get the current user account
     const currentUser = await account.get();
+    console.log('Retrieved account:', currentUser);
     
     // Get the user document from database
     try {
@@ -139,6 +155,15 @@ export const getCurrentUser = async () => {
   try {
     console.log('Getting current user...');
     
+    // First check if there's an active session
+    try {
+      const session = await account.getSession('current');
+      console.log('Current session:', session);
+    } catch (sessionError) {
+      console.log('No active session found:', sessionError);
+      return null;
+    }
+    
     // Add a timeout promise to prevent hanging
     const getAccountPromise = account.get();
     const timeoutPromise = new Promise((_, reject) => 
@@ -147,7 +172,7 @@ export const getCurrentUser = async () => {
     
     // Race the account fetch against a timeout
     const currentAccount = await Promise.race([getAccountPromise, timeoutPromise]);
-    console.log('Account retrieved successfully');
+    console.log('Account retrieved successfully:', currentAccount);
     
     // If we get here, we have a valid account session
     // Now get the user document from database
@@ -185,7 +210,7 @@ export const getCurrentUser = async () => {
           return { account: currentAccount, user: newUser };
         } catch (createError) {
           console.error('Error creating user document:', createError);
-          // Fall back to returning just the account info, which should be enough for basic profile display
+          // Fall back to returning just the account info
           return { 
             account: currentAccount, 
             user: {
@@ -216,6 +241,12 @@ export const getCurrentUser = async () => {
   } catch (error) {
     // This will catch 401 Unauthorized errors when not logged in
     console.error('Error getting current user:', error);
+    // Try to clean up any invalid session
+    try {
+      await account.deleteSession('current');
+    } catch (deleteError) {
+      console.log('No session to delete');
+    }
     return null;
   }
 };
