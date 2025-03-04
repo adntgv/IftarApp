@@ -40,7 +40,6 @@ export default function HomeScreen() {
   
   // Fetch all user data on mount
   const fetchAllUserData = async () => {
-    // Get current state directly from the store
     const authState = useAuthStore.getState();
     console.log(`Fetching data with auth state: isLoggedIn=${authState.isLoggedIn}, isAuthenticated=${authState.isAuthenticated}`);
     

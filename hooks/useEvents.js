@@ -59,7 +59,7 @@ const useEventsStore = create((set, get) => ({
     if (!user) {
       console.log('No user found');
       return;
-    };
+    }
 
     set({ isLoading: true, error: null });
     try {
@@ -77,8 +77,11 @@ const useEventsStore = create((set, get) => ({
       );
       
       set({ events: eventsWithAttendees, isLoading: false });
+      
+      return eventsWithAttendees;
     } catch (error) {
       set({ error: error.message, isLoading: false });
+      return [];
     }
   },
 
@@ -88,7 +91,7 @@ const useEventsStore = create((set, get) => ({
     if (!user) {
       console.log('No user found');
       return;
-    };
+    }
 
     set({ isLoading: true, error: null });
     try {
@@ -127,7 +130,7 @@ const useEventsStore = create((set, get) => ({
     if (!user) {
       console.log('No user found');
       return;
-    };
+    }
 
     set({ isLoading: true, error: null });
     try {
@@ -163,14 +166,20 @@ const useEventsStore = create((set, get) => ({
   // Fetch user invitations
   fetchUserInvitations: async () => {
     const { user } = useAuthStore.getState();
-    if (!user) return;
+    if (!user) {
+      console.log('No user found');
+      return;
+    }
 
     set({ isLoading: true, error: null });
     try {
       const invitations = await eventService.getUserInvitations(user.userId);
       set({ invitations, isLoading: false });
+      
+      return invitations;
     } catch (error) {
       set({ error: error.message, isLoading: false });
+      return [];
     }
   },
 
