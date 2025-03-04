@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 import { initialEvents, initialInvites, generateShareCode } from '../utils/mockData';
 import * as Clipboard from 'expo-clipboard';
 import { Redirect } from 'expo-router';
+import eventService from '../utils/eventService';
+import { getCurrentUser } from '../utils/appwrite';
 
 // Import components
 import Header from '../components/Header';
@@ -23,8 +25,12 @@ import ProfileView from '../components/ProfileView';
 const IftarApp = () => {
   // State
   const [activeTab, setActiveTab] = useState('home');
-  const [events, setEvents] = useState(initialEvents);
-  const [invites, setInvites] = useState(initialInvites);
+  const [events, setEvents] = useState([]);
+  const [invites, setInvites] = useState([]);
+  const [publicEvents, setPublicEvents] = useState([]);
+  const [attendingEvents, setAttendingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -54,6 +60,59 @@ const IftarApp = () => {
     }
   }, [animation]);
 
+  // Fetch user, events, and invites on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Get current user
+        const userResult = await getCurrentUser();
+        setCurrentUser(userResult);
+        
+        if (userResult) {
+          const userId = userResult.account.$id;
+          
+          // Fetch user's events
+          const userEvents = await eventService.getUserEvents(userId);
+          setEvents(userEvents);
+          
+          // Fetch user's invitations
+          const userInvites = await eventService.getUserInvitations(userId);
+          setInvites(userInvites);
+          
+          // Fetch public events
+          const allPublicEvents = await eventService.getPublicEvents();
+          // Filter out user's own events
+          const filteredPublicEvents = allPublicEvents.filter(
+            event => event.hostId !== userId
+          );
+          setPublicEvents(filteredPublicEvents);
+          
+          // Fetch events the user is attending
+          const attending = await eventService.getAttendingEvents(userId);
+          // Filter out user's own events
+          const filteredAttendingEvents = attending.filter(
+            event => event.hostId !== userId
+          );
+          setAttendingEvents(filteredAttendingEvents);
+        } else {
+          // If no user, fall back to mock data
+          setEvents(initialEvents);
+          setInvites(initialInvites);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Fall back to mock data
+        setEvents(initialEvents);
+        setInvites(initialInvites);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
   // Handle tab navigation
   const handleChangeTab = (tab) => {
     setActiveTab(tab);
@@ -71,27 +130,54 @@ const IftarApp = () => {
   };
 
   // Create new event
-  const handleCreateEvent = () => {
-    const shareCode = generateShareCode(newEvent.title);
-    const event = {
-      id: events.length + invites.length + 1,
-      ...newEvent,
-      host: "You",
-      shareCode,
-      attendees: []
-    };
-    setEvents([...events, event]);
-    setNewEvent({
-      title: "",
-      date: "",
-      time: "",
-      location: "",
-      description: "",
-      isPublic: true
-    });
-    setIsCreating(false);
-    setActiveTab('home');
-    setAnimation('create');
+  const handleCreateEvent = async () => {
+    if (!currentUser) {
+      setShowLogin(true);
+      return;
+    }
+    
+    try {
+      const userId = currentUser.account.$id;
+      const userName = currentUser.user.name || 'User';
+      
+      const event = await eventService.createEvent(newEvent, userId, userName);
+      
+      setEvents([...events, event]);
+      setNewEvent({
+        title: "",
+        date: "",
+        time: "",
+        location: "",
+        description: "",
+        isPublic: true
+      });
+      setIsCreating(false);
+      setActiveTab('home');
+      setAnimation('create');
+    } catch (error) {
+      console.error('Error creating event:', error);
+      // Fallback to mock data if Appwrite fails
+      const shareCode = generateShareCode(newEvent.title);
+      const event = {
+        id: events.length + invites.length + 1,
+        ...newEvent,
+        host: "You",
+        shareCode,
+        attendees: []
+      };
+      setEvents([...events, event]);
+      setNewEvent({
+        title: "",
+        date: "",
+        time: "",
+        location: "",
+        description: "",
+        isPublic: true
+      });
+      setIsCreating(false);
+      setActiveTab('home');
+      setAnimation('create');
+    }
   };
 
   // Respond to invitation
@@ -162,12 +248,40 @@ const IftarApp = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
+        // Combine user's events, public events, and attending events
+        // and remove duplicates
+        const allEvents = [...events];
+        
+        // Add public events that aren't already in the list
+        publicEvents.forEach(pubEvent => {
+          if (!allEvents.some(e => e.$id === pubEvent.$id)) {
+            allEvents.push({
+              ...pubEvent,
+              isPublic: true,
+              isOtherUserEvent: true
+            });
+          }
+        });
+        
+        // Add attending events that aren't already in the list
+        attendingEvents.forEach(attEvent => {
+          if (!allEvents.some(e => e.$id === attEvent.$id)) {
+            allEvents.push({
+              ...attEvent,
+              isAttending: true,
+              isOtherUserEvent: true
+            });
+          }
+        });
+        
         return (
           <EventList 
-            events={events} 
+            events={allEvents} 
             viewMode={viewMode} 
             onOpenEvent={handleOpenEvent}
             animation={animation}
+            loading={loading}
+            emptyMessage="No events to display yet"
           />
         );
       
@@ -180,6 +294,7 @@ const IftarApp = () => {
             onOpenEvent={handleOpenEvent}
             onRespond={handleRespond}
             animation={animation}
+            loading={loading}
           />
         );
       
@@ -197,13 +312,21 @@ const IftarApp = () => {
         );
       
       case 'calendar':
-        return <CalendarView events={[...events, ...invites]} />;
+        // Combine all events for calendar view
+        const calendarEvents = [
+          ...events, 
+          ...invites, 
+          ...publicEvents.filter(e => !events.some(ue => ue.$id === e.$id)),
+          ...attendingEvents.filter(e => !events.some(ue => ue.$id === e.$id))
+        ];
+        return <CalendarView events={calendarEvents} />;
       
       case 'profile':
         return <ProfileView 
           onSignOut={() => setIsLoggedIn(false)} 
           eventsCount={events.length}
           invitesCount={invites.length}
+          user={currentUser}
         />;
       
       default:
@@ -214,7 +337,7 @@ const IftarApp = () => {
   // Determine header title based on active tab
   const getHeaderTitle = () => {
     switch (activeTab) {
-      case 'home': return 'Your Iftar Events';
+      case 'home': return 'All Iftar Events';
       case 'invites': return 'Your Invitations';
       case 'create': return 'Create Event';
       case 'calendar': return 'Calendar';

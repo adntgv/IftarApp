@@ -65,6 +65,59 @@ export const getUserEvents = async (userId) => {
 };
 
 /**
+ * Get all public events
+ */
+export const getPublicEvents = async () => {
+  console.log('getPublicEvents');
+  try {
+    const response = await databases.listDocuments(
+      ENV.DATABASE_ID,
+      EVENTS_COLLECTION_ID
+    );
+    
+    return response.documents;
+  } catch (error) {
+    console.error('Error fetching public events:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get events the user is attending
+ */
+export const getAttendingEvents = async (userId) => {
+  try {
+    // Get all attendees for this user
+    const attendees = await databases.listDocuments(
+      ENV.DATABASE_ID,
+      ATTENDEES_COLLECTION_ID,
+      [
+        Query.equal('userId', userId),
+        Query.equal('status', 'confirmed')
+      ]
+    );
+    
+    // Fetch the event details for each attendance
+    const events = await Promise.all(
+      attendees.documents.map(async (attendee) => {
+        try {
+          return await getEventById(attendee.eventId);
+        } catch (error) {
+          console.error(`Error fetching event ${attendee.eventId}:`, error);
+          return null;
+        }
+      })
+    );
+    
+    // Filter out any null values from events that couldn't be fetched
+    return events.filter(event => event !== null);
+  } catch (error) {
+    console.error('Error fetching attending events:', error);
+    throw error;
+  }
+};
+
+/**
  * Get an event by ID
  */
 export const getEventById = async (eventId) => {
@@ -370,6 +423,8 @@ export const respondToInvitation = async (invitationId, status, userId, userName
 export default {
   createEvent,
   getUserEvents,
+  getPublicEvents,
+  getAttendingEvents,
   getEventById,
   getEventByShareCode,
   updateEvent,

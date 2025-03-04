@@ -94,7 +94,12 @@
         },
         {
             "$id": "events",
-            "$permissions": [],
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
             "databaseId": "67be2835003c542ca773",
             "name": "Events",
             "enabled": true,
@@ -218,7 +223,12 @@
         },
         {
             "$id": "attendees",
-            "$permissions": [],
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
             "databaseId": "67be2835003c542ca773",
             "name": "Attendees",
             "enabled": true,
@@ -313,7 +323,12 @@
         },
         {
             "$id": "invitations",
-            "$permissions": [],
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
             "databaseId": "67be2835003c542ca773",
             "name": "Invitations",
             "enabled": true,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { Calendar, Clock, MapPin, Users, Check, X } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, Users, Check, X, UserCircle } from 'lucide-react-native';
 import Card from './ui/Card';
 import Badge from './ui/Badge';
 import { useTheme } from './ThemeProvider';
@@ -56,6 +56,28 @@ const EventCard = ({
     );
   };
   
+  // Host information display
+  const renderHostInfo = () => {
+    if (!event.isOtherUserEvent) return null;
+    
+    return (
+      <View style={styles.hostContainer}>
+        <UserCircle size={16} color={colors.textSecondary} />
+        <Text 
+          style={[
+            styles.hostText,
+            { 
+              color: colors.textSecondary,
+              fontFamily: typography.fontFamily.regular,
+            }
+          ]}
+        >
+          Host: {event.hostName || 'Unknown'}
+        </Text>
+      </View>
+    );
+  };
+  
   return (
     <Animated.View 
       style={{ 
@@ -87,6 +109,8 @@ const EventCard = ({
         
         <View style={styles.content}>
           <View style={styles.detailsContainer}>
+            {renderHostInfo()}
+            
             <View style={styles.detailRow}>
               <Calendar size={18} color={colors.primary} />
               <Text 
@@ -195,24 +219,46 @@ const EventCard = ({
           </View>
         )}
         
-        {event.isPublic && (
-          <View 
-            style={[
-              styles.publicBadge, 
-              { backgroundColor: colors.primary }
-            ]}
-          >
-            <Text 
-              style={{ 
-                color: '#FFFFFF', 
-                fontSize: typography.fontSize.xs,
-                fontFamily: typography.fontFamily.medium,
-              }}
+        {/* Event badges */}
+        <View style={styles.badgesContainer}>
+          {event.isPublic && (
+            <View 
+              style={[
+                styles.badge, 
+                { backgroundColor: colors.primary }
+              ]}
             >
-              PUBLIC
-            </Text>
-          </View>
-        )}
+              <Text 
+                style={{ 
+                  color: '#FFFFFF', 
+                  fontSize: typography.fontSize.xs,
+                  fontFamily: typography.fontFamily.medium,
+                }}
+              >
+                PUBLIC
+              </Text>
+            </View>
+          )}
+          
+          {event.isAttending && (
+            <View 
+              style={[
+                styles.badge, 
+                { backgroundColor: colors.success, marginLeft: 8 }
+              ]}
+            >
+              <Text 
+                style={{ 
+                  color: '#FFFFFF', 
+                  fontSize: typography.fontSize.xs,
+                  fontFamily: typography.fontFamily.medium,
+                }}
+              >
+                ATTENDING
+              </Text>
+            </View>
+          )}
+        </View>
       </Card>
     </Animated.View>
   );
@@ -242,6 +288,18 @@ const styles = StyleSheet.create({
   detailsContainer: {
     flex: 1,
   },
+  hostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  hostText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -249,6 +307,19 @@ const styles = StyleSheet.create({
   },
   detailText: {
     marginLeft: 8,
+    fontSize: 14,
+  },
+  badgesContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    flexDirection: 'row',
+    padding: 4,
+  },
+  badge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -276,15 +347,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontStyle: 'italic',
-  },
-  publicBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 0,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
   },
 });
 
