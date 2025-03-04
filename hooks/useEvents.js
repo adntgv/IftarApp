@@ -6,6 +6,8 @@ import useAuthStore from './useAuth';
 const useEventsStore = create((set, get) => ({
   events: [],
   invitations: [],
+  publicEvents: [],
+  attendingEvents: [],
   selectedEvent: null,
   isLoading: false,
   error: null,
@@ -77,6 +79,84 @@ const useEventsStore = create((set, get) => ({
       set({ events: eventsWithAttendees, isLoading: false });
     } catch (error) {
       set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Fetch all public events
+  fetchPublicEvents: async () => {
+    const { user } = useAuthStore.getState();
+    if (!user) {
+      console.log('No user found');
+      return;
+    };
+
+    set({ isLoading: true, error: null });
+    try {
+      const allPublicEvents = await eventService.getPublicEvents();
+      
+      // Filter out user's own events
+      const filteredPublicEvents = allPublicEvents.filter(
+        event => event.hostId !== user.userId
+      );
+      
+      // For each event, fetch the attendees
+      const publicEventsWithAttendees = await Promise.all(
+        filteredPublicEvents.map(async (event) => {
+          const attendees = await eventService.getEventAttendees(event.$id);
+          return {
+            ...event,
+            attendees,
+            isPublic: true,
+            isOtherUserEvent: true
+          };
+        })
+      );
+      
+      set({ publicEvents: publicEventsWithAttendees, isLoading: false });
+      
+      return publicEventsWithAttendees;
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+      return [];
+    }
+  },
+  
+  // Fetch events the user is attending
+  fetchAttendingEvents: async () => {
+    const { user } = useAuthStore.getState();
+    if (!user) {
+      console.log('No user found');
+      return;
+    };
+
+    set({ isLoading: true, error: null });
+    try {
+      const attending = await eventService.getAttendingEvents(user.userId);
+      
+      // Filter out user's own events
+      const filteredAttendingEvents = attending.filter(
+        event => event.hostId !== user.userId
+      );
+      
+      // For each event, fetch the attendees
+      const attendingEventsWithAttendees = await Promise.all(
+        filteredAttendingEvents.map(async (event) => {
+          const attendees = await eventService.getEventAttendees(event.$id);
+          return {
+            ...event,
+            attendees,
+            isAttending: true,
+            isOtherUserEvent: true
+          };
+        })
+      );
+      
+      set({ attendingEvents: attendingEventsWithAttendees, isLoading: false });
+      
+      return attendingEventsWithAttendees;
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+      return [];
     }
   },
 
@@ -242,6 +322,8 @@ const useEventsStore = create((set, get) => ({
     set({
       events: [],
       invitations: [],
+      publicEvents: [],
+      attendingEvents: [],
       selectedEvent: null,
       isLoading: false,
       error: null,

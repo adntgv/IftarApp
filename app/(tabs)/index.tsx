@@ -16,6 +16,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const { 
     events, 
+    publicEvents,
+    attendingEvents,
     selectedEvent,
     viewMode, 
     animation,
@@ -50,7 +52,9 @@ export default function HomeScreen() {
     try {
       await Promise.all([
         fetchUserEvents(),
-        fetchUserInvitations()
+        fetchUserInvitations(),
+        useEventsStore.getState().fetchPublicEvents(),
+        useEventsStore.getState().fetchAttendingEvents()
       ]);
       console.log('Data fetched successfully');
     } catch (error) {
@@ -158,6 +162,32 @@ export default function HomeScreen() {
     }
   };
 
+  // Combine all events for display
+  const getAllEvents = () => {
+    // Start with user's own events
+    const allEvents = [...events];
+    
+    // Add public events that aren't already in the list
+    if (publicEvents && publicEvents.length > 0) {
+      publicEvents.forEach((pubEvent: EventLike) => {
+        if (!allEvents.some(e => e.$id === pubEvent.$id)) {
+          allEvents.push(pubEvent);
+        }
+      });
+    }
+    
+    // Add attending events that aren't already in the list
+    if (attendingEvents && attendingEvents.length > 0) {
+      attendingEvents.forEach((attEvent: EventLike) => {
+        if (!allEvents.some(e => e.$id === attEvent.$id)) {
+          allEvents.push(attEvent);
+        }
+      });
+    }
+    
+    return allEvents;
+  };
+
   return (
     <View style={styles.container}>
       <Header 
@@ -168,7 +198,7 @@ export default function HomeScreen() {
       
       <View style={styles.content}>
         <EventList 
-          events={events} 
+          events={getAllEvents()} 
           viewMode={viewMode} 
           onOpenEvent={handleOpenEvent}
           onRespond={handleRespond}
