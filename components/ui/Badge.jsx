@@ -49,6 +49,8 @@ const Badge = ({
         return colors.warning;
       case 'info':
         return colors.info;
+      case 'neutral':
+        return colors.textSecondary;
       case 'primary':
       default:
         return colors.primary;

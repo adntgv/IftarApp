@@ -420,6 +420,34 @@ export const respondToInvitation = async (invitationId, status, userId, userName
   }
 };
 
+/**
+ * Get user's attendance status for a specific event
+ */
+export const getUserAttendanceStatus = async (eventId, userId) => {
+  try {
+    // Check if the user is an attendee for this event
+    const existingAttendees = await databases.listDocuments(
+      ENV.DATABASE_ID,
+      ATTENDEES_COLLECTION_ID,
+      [
+        Query.equal('eventId', eventId),
+        Query.equal('userId', userId)
+      ]
+    );
+    
+    // If the user is an attendee, return their status
+    if (existingAttendees.documents.length > 0) {
+      return existingAttendees.documents[0].status;
+    }
+    
+    // If the user is not an attendee, return 'not-attending'
+    return 'not-attending';
+  } catch (error) {
+    console.error('Error checking user attendance status:', error);
+    throw error;
+  }
+};
+
 export default {
   createEvent,
   getUserEvents,
@@ -434,5 +462,6 @@ export default {
   updateAttendeeStatus,
   getUserInvitations,
   createInvitation,
-  respondToInvitation
+  respondToInvitation,
+  getUserAttendanceStatus
 }; 

@@ -338,6 +338,58 @@ const useEventsStore = create((set, get) => ({
       error: null,
       isCreating: false
     });
+  },
+
+  // Combine all events for display
+  getAllEvents: () => {
+    const { user } = useAuthStore.getState();
+    if (!user) return [];
+    
+    // Start with user's own events
+    const allEvents = [...get().events];
+    
+    // Add public events that aren't already in the list
+    if (get().publicEvents && get().publicEvents.length > 0) {
+      get().publicEvents.forEach((pubEvent) => {
+        if (!allEvents.some(e => e.$id === pubEvent.$id)) {
+          allEvents.push(pubEvent);
+        }
+      });
+    }
+    
+    // Add attending events that aren't already in the list
+    if (get().attendingEvents && get().attendingEvents.length > 0) {
+      get().attendingEvents.forEach((attEvent) => {
+        if (!allEvents.some(e => e.$id === attEvent.$id)) {
+          allEvents.push(attEvent);
+        }
+      });
+    }
+    
+    // Find the user's attendance status for each event
+    // This is already done for 'attending' events, but not for others
+    return allEvents.map(event => {
+      // If the user is the host, they're automatically attending
+      if (event.hostId === user.userId) {
+        return { ...event, attendanceStatus: 'confirmed' };
+      }
+      
+      // If this is an event with attendance info, use that
+      if (event.isAttending) {
+        return { ...event, attendanceStatus: 'confirmed' };
+      }
+      
+      // Check the attendees list to see if the user is in it and what their status is
+      if (event.attendees && Array.isArray(event.attendees)) {
+        const userAttendance = event.attendees.find(att => att.userId === user.userId);
+        if (userAttendance) {
+          return { ...event, attendanceStatus: userAttendance.status };
+        }
+      }
+      
+      // Default to not attending
+      return { ...event, attendanceStatus: 'not-attending' };
+    });
   }
 }));
 
