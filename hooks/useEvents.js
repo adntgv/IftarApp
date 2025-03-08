@@ -469,9 +469,13 @@ const useEventsStore = create((set, get) => ({
         return event;
       }
       
-      // If the user is the host, they're automatically attending
+      // If the user is the host, mark it as their own event
       if (event.hostId === user.userId) {
-        return { ...event, attendanceStatus: 'confirmed' };
+        return { 
+          ...event, 
+          attendanceStatus: 'confirmed',
+          isOwnEvent: true,  // Add flag to indicate this is the user's own event
+        };
       }
       
       // If this is an event with attendance info, use that

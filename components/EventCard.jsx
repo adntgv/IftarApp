@@ -1,37 +1,43 @@
 import React from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { Calendar, Clock, MapPin, Users, Check, X, UserCircle } from 'lucide-react-native';
 import Card from './ui/Card';
 import Badge from './ui/Badge';
 import { useTheme } from './ThemeProvider';
+import useAuthStore from '../hooks/useAuth';
 
 // Create styles using a function pattern
 const createStyles = (colors, spacing, typography) => StyleSheet.create({
   card: {
     borderLeftWidth: 0,
     overflow: 'hidden',
+    padding: 12,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
+    flexWrap: 'wrap',
   },
   title: {
     flex: 1,
     marginRight: 8,
     color: colors.text,
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.base,
     fontFamily: typography.fontFamily.medium,
+    flexShrink: 1,
   },
   statusBadge: {
     marginLeft: 'auto',
   },
   content: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   detailsContainer: {
     flex: 1,
+    minWidth: 200,
   },
   hostContainer: {
     flexDirection: 'row',
@@ -43,20 +49,22 @@ const createStyles = (colors, spacing, typography) => StyleSheet.create({
   },
   hostText: {
     marginLeft: 8,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
     fontFamily: typography.fontFamily.regular,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   detailText: {
-    marginLeft: 8,
-    fontSize: 14,
+    marginLeft: 6,
+    fontSize: 13,
     color: colors.textSecondary,
     fontFamily: typography.fontFamily.regular,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   badgesContainer: {
     position: 'absolute',
@@ -73,25 +81,46 @@ const createStyles = (colors, spacing, typography) => StyleSheet.create({
   attendanceControlContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: 4,
+    ...Platform.select({
+      ios: {
+        paddingBottom: 4,
+      }
+    })
   },
   attendanceButton: {
-    flex: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 6,
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
+      }
+    })
   },
   attendanceButtonText: {
     fontSize: 12,
     marginLeft: 4,
     fontFamily: typography.fontFamily.medium,
+    textAlign: 'center',
+    ...Platform.select({
+      ios: {
+        fontWeight: '500',
+      }
+    })
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -139,6 +168,10 @@ const EventCard = ({
   const { colors, spacing } = theme;
   const typography = theme.typography;
   
+  // Check if this is the user's own event either from flag or by checking IDs
+  const { user } = useAuthStore();
+  const isOwnEvent = event.isOwnEvent || (user && event.hostId === user.userId);
+  
   // Create styles with theme values
   const styles = createStyles(colors, spacing, typography);
   
@@ -154,6 +187,18 @@ const EventCard = ({
   
   // Status badge color based on event status
   const getStatusBadge = () => {
+    // If this is the user's own event, show a Host badge
+    if (isOwnEvent) {
+      return (
+        <Badge 
+          text="Host" 
+          variant="primary" 
+          size="small"
+          style={styles.statusBadge}
+        />
+      );
+    }
+    
     if (isInvite) {
       let variant = 'primary';
       let text = 'Pending';
@@ -247,7 +292,7 @@ const EventCard = ({
               styles.title, 
               { 
                 color: colors.text,
-                fontSize: typography.fontSize.lg,
+                fontSize: typography.fontSize.base,
                 fontFamily: typography.fontFamily.medium,
               }
             ]}
@@ -262,37 +307,7 @@ const EventCard = ({
             {renderHostInfo()}
             
             <View style={styles.detailRow}>
-              <Calendar size={18} color={colors.primary} />
-              <Text 
-                style={[
-                  styles.detailText,
-                  { 
-                    color: colors.textSecondary,
-                    fontFamily: typography.fontFamily.regular,
-                  }
-                ]}
-              >
-                {event.date}
-              </Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Clock size={18} color={colors.primary} />
-              <Text 
-                style={[
-                  styles.detailText,
-                  { 
-                    color: colors.textSecondary,
-                    fontFamily: typography.fontFamily.regular,
-                  }
-                ]}
-              >
-                {event.time || "7:00 PM"}
-              </Text>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <MapPin size={18} color={colors.primary} />
+              <Calendar size={16} color={colors.primary} />
               <Text 
                 style={[
                   styles.detailText,
@@ -303,13 +318,46 @@ const EventCard = ({
                 ]}
                 numberOfLines={1}
               >
+                {event.date}
+              </Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <Clock size={16} color={colors.primary} />
+              <Text 
+                style={[
+                  styles.detailText,
+                  { 
+                    color: colors.textSecondary,
+                    fontFamily: typography.fontFamily.regular,
+                  }
+                ]}
+                numberOfLines={1}
+              >
+                {event.time || "7:00 PM"}
+              </Text>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <MapPin size={16} color={colors.primary} />
+              <Text 
+                style={[
+                  styles.detailText,
+                  { 
+                    color: colors.textSecondary,
+                    fontFamily: typography.fontFamily.regular,
+                  }
+                ]}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
                 {event.location}
               </Text>
             </View>
             
             {event.attendees && (
               <View style={styles.detailRow}>
-                <Users size={18} color={colors.primary} />
+                <Users size={16} color={colors.primary} />
                 <Text 
                   style={[
                     styles.detailText,
@@ -318,6 +366,7 @@ const EventCard = ({
                       fontFamily: typography.fontFamily.regular,
                     }
                   ]}
+                  numberOfLines={1}
                 >
                   {Array.isArray(event.attendees) ? event.attendees.length : 0} attendees
                 </Text>
@@ -350,78 +399,113 @@ const EventCard = ({
             </View>
           )}
           
-          {!isInvite && event.attendanceStatus && (
+          {!isInvite && event.attendanceStatus && !isOwnEvent && (
             <View style={styles.attendanceControlContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.attendanceButton,
-                  { 
-                    backgroundColor: event.attendanceStatus === 'confirmed' ? colors.success : 'transparent',
-                    borderColor: colors.success,
-                    marginRight: 8 
-                  }
-                ]}
-                onPress={() => onRespond(event.$id, 'confirmed')}
-              >
-                <Check size={16} color={event.attendanceStatus === 'confirmed' ? '#FFFFFF' : colors.success} />
-                <Text 
+              {/* Wrap each button in a fixed-width container for consistent spacing */}
+              <View style={{
+                width: '32%', 
+                alignItems: 'center',
+                ...Platform.select({
+                  ios: { marginBottom: 4 }
+                })
+              }}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
                   style={[
-                    styles.attendanceButtonText,
+                    styles.attendanceButton,
                     { 
-                      color: event.attendanceStatus === 'confirmed' ? '#FFFFFF' : colors.success,
+                      backgroundColor: event.attendanceStatus === 'confirmed' ? colors.success : 'transparent',
+                      borderColor: colors.success,
+                      ...Platform.select({
+                        ios: { width: '100%' }
+                      })
                     }
                   ]}
+                  onPress={() => onRespond(event.$id, 'confirmed')}
                 >
-                  Going
-                </Text>
-              </TouchableOpacity>
+                  <Check size={14} color={event.attendanceStatus === 'confirmed' ? '#FFFFFF' : colors.success} />
+                  <Text 
+                    style={[
+                      styles.attendanceButtonText,
+                      { 
+                        color: event.attendanceStatus === 'confirmed' ? '#FFFFFF' : colors.success,
+                      }
+                    ]}
+                  >
+                    Going
+                  </Text>
+                </TouchableOpacity>
+              </View>
               
-              <TouchableOpacity
-                style={[
-                  styles.attendanceButton,
-                  { 
-                    backgroundColor: event.attendanceStatus === 'pending' ? colors.warning : 'transparent',
-                    borderColor: colors.warning,
-                    marginRight: 8 
-                  }
-                ]}
-                onPress={() => onRespond(event.$id, 'pending')}
-              >
-                <Clock size={16} color={event.attendanceStatus === 'pending' ? '#FFFFFF' : colors.warning} />
-                <Text 
+              <View style={{
+                width: '32%', 
+                alignItems: 'center',
+                ...Platform.select({
+                  ios: { marginBottom: 4 }
+                })
+              }}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
                   style={[
-                    styles.attendanceButtonText,
+                    styles.attendanceButton,
                     { 
-                      color: event.attendanceStatus === 'pending' ? '#FFFFFF' : colors.warning,
+                      backgroundColor: event.attendanceStatus === 'pending' ? colors.warning : 'transparent',
+                      borderColor: colors.warning,
+                      ...Platform.select({
+                        ios: { width: '100%' }
+                      })
                     }
                   ]}
+                  onPress={() => onRespond(event.$id, 'pending')}
                 >
-                  Maybe
-                </Text>
-              </TouchableOpacity>
+                  <Clock size={14} color={event.attendanceStatus === 'pending' ? '#FFFFFF' : colors.warning} />
+                  <Text 
+                    style={[
+                      styles.attendanceButtonText,
+                      { 
+                        color: event.attendanceStatus === 'pending' ? '#FFFFFF' : colors.warning,
+                      }
+                    ]}
+                  >
+                    Maybe
+                  </Text>
+                </TouchableOpacity>
+              </View>
               
-              <TouchableOpacity
-                style={[
-                  styles.attendanceButton,
-                  { 
-                    backgroundColor: event.attendanceStatus === 'not-attending' ? colors.error : 'transparent',
-                    borderColor: colors.error 
-                  }
-                ]}
-                onPress={() => onRespond(event.$id, 'not-attending')}
-              >
-                <X size={16} color={event.attendanceStatus === 'not-attending' ? '#FFFFFF' : colors.error} />
-                <Text 
+              <View style={{
+                width: '32%', 
+                alignItems: 'center',
+                ...Platform.select({
+                  ios: { marginBottom: 4 }
+                })
+              }}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
                   style={[
-                    styles.attendanceButtonText,
+                    styles.attendanceButton,
                     { 
-                      color: event.attendanceStatus === 'not-attending' ? '#FFFFFF' : colors.error,
+                      backgroundColor: event.attendanceStatus === 'not-attending' ? colors.error : 'transparent',
+                      borderColor: colors.error,
+                      ...Platform.select({
+                        ios: { width: '100%' }
+                      })
                     }
                   ]}
+                  onPress={() => onRespond(event.$id, 'not-attending')}
                 >
-                  No
-                </Text>
-              </TouchableOpacity>
+                  <X size={14} color={event.attendanceStatus === 'not-attending' ? '#FFFFFF' : colors.error} />
+                  <Text 
+                    style={[
+                      styles.attendanceButtonText,
+                      { 
+                        color: event.attendanceStatus === 'not-attending' ? '#FFFFFF' : colors.error,
+                      }
+                    ]}
+                  >
+                    No
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
