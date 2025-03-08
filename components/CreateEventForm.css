@@ -1,0 +1,49 @@
+/* Styles for web date and time inputs */
+
+/* Common styles for date and time inputs */
+.date-input,
+.time-input {
+  width: 100%;
+  height: 100%;
+  padding: 8px 12px;
+  font-size: 15px;
+  color: #4b5563;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Remove default styling from date inputs */
+.date-input::-webkit-calendar-picker-indicator,
+.time-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Firefox specific styles */
+@-moz-document url-prefix() {
+  .date-input,
+  .time-input {
+    text-align: left;
+  }
+}
+
+/* Disabled state */
+.date-input:disabled,
+.time-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Focus state */
+.date-input:focus,
+.time-input:focus {
+  background-color: rgba(59, 130, 246, 0.05);
+}

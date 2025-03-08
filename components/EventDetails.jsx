@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform, SafeAreaView } from 'react-native';
 import { Calendar, Clock, MapPin, Users, Edit, Send, Share2, Check, X, Moon } from 'lucide-react-native';
+import { format, parseISO } from 'date-fns';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Input from './ui/Input';
@@ -222,7 +223,11 @@ const EventDetails = ({
                 <Calendar size={20} color="#6b7280" style={styles.detailIcon} />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date & Time</Text>
-                  <Text style={styles.detailText}>{event.date} at {event.time}</Text>
+                  <Text style={styles.detailText}>
+                    {event.date && typeof event.date === 'string' 
+                      ? format(parseISO(event.date.includes('T') ? event.date : `${event.date}T00:00:00`), 'MMMM d, yyyy')
+                      : event.date} at {event.time}
+                  </Text>
                 </View>
               </View>
               

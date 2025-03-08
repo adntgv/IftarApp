@@ -137,6 +137,11 @@ const IftarApp = () => {
     }
     
     try {
+      // Validate if we have all required fields
+      if (!newEvent.title || !newEvent.date || !newEvent.time || !newEvent.location) {
+        return;
+      }
+      
       const userId = currentUser.account.$id;
       const userName = currentUser.user.name || 'User';
       

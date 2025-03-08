@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ImageBackground, Animated, Platform, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ImageBackground, Animated, Platform, SafeAreaView, TouchableOpacity } from 'react-native';
 import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check } from 'lucide-react-native';
+import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import Button from './ui/Button';
 import Card from './ui/Card';
 import * as Linking from 'expo-linking';
@@ -56,18 +57,52 @@ const PublicEventView = ({
   const diffTime = Math.abs(eventDate - today);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
+  // Format the date using date-fns
+  const formattedDate = event.date && typeof event.date === 'string'
+    ? format(parseISO(event.date.includes('T') ? event.date : `${event.date}T00:00:00`), 'MMMM d, yyyy')
+    : event.date;
+    
   // Calculate sunset time (example)
   const sunsetTime = "18:23";
   
   // Function to open maps app
-  const openMaps = () => {
-    const location = encodeURIComponent(event.location);
-    const mapsUrl = `https://maps.google.com/?q=${location}`;
-    Linking.openURL(mapsUrl).catch(err => console.error('An error occurred', err));
+  const openMaps = (location) => {
+    const query = encodeURIComponent(location);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+      web: `https://maps.google.com/?q=${query}`,
+    });
+    
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        console.log("Don't know how to open URI: " + url);
+      }
+    });
   };
   
+  // Check if maps can be opened
+  const [canOpenMaps, setCanOpenMaps] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (event && event.location) {
+      const query = encodeURIComponent(event.location);
+      const url = Platform.select({
+        ios: `maps:0,0?q=${query}`,
+        android: `geo:0,0?q=${query}`,
+        web: `https://maps.google.com/?q=${query}`,
+      });
+      
+      Linking.canOpenURL(url).then(supported => {
+        setCanOpenMaps(supported);
+      });
+    }
+  }, [event]);
+  
   return (
-    <View style={styles.container}>
+    <Modal isVisible={isModalVisible} onClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Header background */}
@@ -97,7 +132,7 @@ const PublicEventView = ({
           <View style={styles.titleContainer}>
             <View style={styles.titleCard}>
               <Text style={styles.title}>{event.title}</Text>
-              <Text style={styles.host}>Hosted by {event.host}</Text>
+              <Text style={styles.host}>Hosted by {event.hostName || event.host}</Text>
               
               {/* Add the countdown widgets */}
               <View style={styles.statsContainer}>
@@ -133,23 +168,27 @@ const PublicEventView = ({
                 <Calendar size={20} color="#6b7280" style={styles.detailIcon} />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date & Time</Text>
-                  <Text style={styles.detailText}>{event.date} at {event.time}</Text>
+                  <Text style={styles.detailText}>{formattedDate} at {event.time}</Text>
+                  <Text style={styles.detailSubtext}>
+                    {formatDistanceToNow(eventDate, { addSuffix: true })}
+                  </Text>
                 </View>
               </View>
               
-              <View style={styles.infoRow}>
-                <MapPin size={20} color="#6b7280" style={styles.infoIcon} />
+              <View style={styles.detailRow}>
+                <MapPin size={20} color="#6b7280" style={styles.detailIcon} />
                 <View style={styles.detailContent}>
-                  <Text style={styles.infoLabel}>Location</Text>
-                  <Text style={styles.infoValue}>{event.location}</Text>
-                  <Button 
-                    variant="link" 
-                    icon={<ExternalLink size={14} color="#2563eb" />}
-                    onPress={openMaps}
-                    style={styles.mapLink}
-                  >
-                    View on Maps
-                  </Button>
+                  <Text style={styles.detailLabel}>Location</Text>
+                  <Text style={styles.detailText}>{event.location}</Text>
+                  {canOpenMaps && (
+                    <Button 
+                      variant="link" 
+                      icon={<ExternalLink size={14} color="#2563eb" />}
+                      onPress={() => openMaps(event.location)}
+                      style={styles.mapLink}
+                      title="View on Maps"
+                    />
+                  )}
                 </View>
               </View>
               
@@ -165,73 +204,29 @@ const PublicEventView = ({
             </Card>
           </View>
           
-          {/* Host information and RSVP */}
-          <View style={styles.hostContainer}>
-            <Card style={styles.hostCard}>
-              <View style={styles.hostHeader}>
-                <Text style={styles.hostHeaderText}>About the Host</Text>
-              </View>
-              
-              <View style={styles.hostInfo}>
-                <View style={styles.hostAvatar}>
-                  <User size={24} color="#3b82f6" />
-                </View>
-                <View>
-                  <Text style={styles.hostName}>{event.host}</Text>
-                  <Text style={styles.hostRole}>Event Organizer</Text>
-                </View>
-              </View>
-              
-              <View style={styles.rsvpContainer}>
-                <Text style={styles.rsvpText}>
-                  Would you like to attend this iftar event?
-                </Text>
-                
-                {isLoggedIn ? (
-                  <View style={styles.rsvpButtons}>
-                    <Button 
-                      variant="success" 
-                      icon={<Check size={18} color="white" />}
-                      onPress={() => {
-                        if (event.status) {
-                          onRespond(event.id, 'confirmed');
-                        }
-                        onClose();
-                      }}
-                      style={styles.rsvpButton}
-                    >
-                      I'll Attend
-                    </Button>
-                    <Button 
-                      variant="danger" 
-                      icon={<X size={18} color="white" />}
-                      onPress={() => {
-                        if (event.status) {
-                          onRespond(event.id, 'declined');
-                        }
-                        onClose();
-                      }}
-                      style={styles.rsvpButton}
-                    >
-                      I Can't Attend
-                    </Button>
-                  </View>
-                ) : (
-                  <Button 
-                    variant="primary" 
-                    icon={<LogIn size={18} color="white" />}
-                    onPress={onLogin}
-                    style={styles.signInButton}
-                  >
-                    Sign in to RSVP
-                  </Button>
-                )}
-              </View>
-            </Card>
+          {/* Call to action */}
+          <View style={styles.actionContainer}>
+            {!isLoggedIn ? (
+              <Button
+                variant="primary"
+                title="Log in to Respond"
+                icon={<LogIn size={18} color="white" />}
+                onPress={onLogin}
+                style={styles.actionButton}
+              />
+            ) : (
+              <Button
+                variant="primary"
+                title="I'm Attending"
+                icon={<Check size={18} color="white" />}
+                onPress={() => onRespond && onRespond(event.id, 'confirmed')}
+                style={styles.actionButton}
+              />
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </Modal>
   );
 };
 
@@ -393,90 +388,18 @@ const styles = StyleSheet.create({
   detailContent: {
     flex: 1,
   },
-  hostContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 32,
-  },
-  hostCard: {
-    borderLeftWidth: 0,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  hostHeader: {
+  actionContainer: {
     padding: 16,
-    backgroundColor: '#f9fafb',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  hostHeaderText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  hostInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  hostAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#dbeafe',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  hostName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
-  },
-  hostRole: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  rsvpContainer: {
-    padding: 24,
     backgroundColor: '#eff6ff',
     alignItems: 'center',
   },
-  rsvpText: {
-    textAlign: 'center',
-    color: '#4b5563',
-    marginBottom: 16,
-  },
-  rsvpButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  rsvpButton: {
-    flex: 0.48,
-  },
-  signInButton: {
+  actionButton: {
     minWidth: 160,
   },
-  infoRow: {
-    flexDirection: 'row',
-    marginTop: 16,
-  },
-  infoIcon: {
+  detailSubtext: {
+    fontSize: 12,
+    color: '#6b7280',
     marginTop: 2,
-    marginRight: 12,
-  },
-  infoLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 15,
-    color: '#4b5563',
-  },
-  mapLink: {
-    marginTop: 8,
   },
 });
 
