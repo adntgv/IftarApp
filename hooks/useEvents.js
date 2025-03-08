@@ -241,6 +241,94 @@ const useEventsStore = create((set, get) => ({
     }
   },
 
+  // Update attendance status for any event (not just invitations)
+  updateAttendanceStatus: async (eventId, status) => {
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+
+    set({ isLoading: true, error: null });
+    try {
+      // If status is 'not-attending', check if there's a record to delete
+      if (status === 'not-attending') {
+        const currentStatus = await eventService.getUserAttendanceStatus(eventId, user.userId);
+        // If user was already not attending, no action needed
+        if (currentStatus === 'not-attending') {
+          set({ isLoading: false });
+          return true;
+        }
+      }
+
+      // Get the event to get the host ID
+      const event = await eventService.getEventById(eventId);
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      // Update attendance status in Appwrite
+      await eventService.addAttendee(
+        eventId,
+        user.userId,
+        user.name,
+        status,
+        event.hostId
+      );
+      
+      // Immediately update local state for a better UI experience
+      set(state => {
+        // First, find the event in each category and update its attendance status
+        const updateEventInArray = (events) => {
+          return events.map(evt => 
+            evt.$id === eventId ? { ...evt, attendanceStatus: status } : evt
+          );
+        };
+        
+        // Update all events arrays
+        const updatedEvents = updateEventInArray(state.events);
+        const updatedPublicEvents = updateEventInArray(state.publicEvents);
+        const updatedAttendingEvents = updateEventInArray(state.attendingEvents);
+        
+        // If attending status changed to 'confirmed', add to attending events if not there
+        const shouldBeInAttending = status === 'confirmed';
+        
+        // If it should be in attending but isn't, add it (after ensuring we have the event)
+        let finalAttendingEvents = updatedAttendingEvents;
+        if (shouldBeInAttending && !finalAttendingEvents.some(e => e.$id === eventId)) {
+          const eventToAdd = [...updatedEvents, ...updatedPublicEvents].find(e => e.$id === eventId);
+          if (eventToAdd) {
+            finalAttendingEvents = [...finalAttendingEvents, {...eventToAdd, attendanceStatus: 'confirmed', isAttending: true}];
+          }
+        }
+        
+        // If it shouldn't be in attending but is, remove it
+        if (!shouldBeInAttending) {
+          finalAttendingEvents = finalAttendingEvents.filter(e => e.$id !== eventId);
+        }
+        
+        return {
+          events: updatedEvents,
+          publicEvents: updatedPublicEvents,
+          attendingEvents: finalAttendingEvents,
+          isLoading: false
+        };
+      });
+      
+      // Still do a fetch to ensure our data is synced with the server
+      // but do it in the background
+      Promise.all([
+        get().fetchUserEvents(),
+        get().fetchAttendingEvents()
+      ]).catch(error => {
+        console.error('Background fetch error:', error);
+      });
+      
+      get().setAnimation('respond');
+      return true;
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
+
   // Invite a user to an event
   inviteToEvent: async (eventId, email) => {
     const { user } = useAuthStore.getState();
@@ -362,6 +450,13 @@ const useEventsStore = create((set, get) => ({
       get().attendingEvents.forEach((attEvent) => {
         if (!allEvents.some(e => e.$id === attEvent.$id)) {
           allEvents.push(attEvent);
+        } else {
+          // If the event exists, make sure we use the attending version
+          // which has the most accurate attendance status
+          const index = allEvents.findIndex(e => e.$id === attEvent.$id);
+          if (index !== -1) {
+            allEvents[index] = attEvent;
+          }
         }
       });
     }
@@ -369,6 +464,11 @@ const useEventsStore = create((set, get) => ({
     // Find the user's attendance status for each event
     // This is already done for 'attending' events, but not for others
     return allEvents.map(event => {
+      // If this is an event with attendance info already set, use that
+      if (event.attendanceStatus) {
+        return event;
+      }
+      
       // If the user is the host, they're automatically attending
       if (event.hostId === user.userId) {
         return { ...event, attendanceStatus: 'confirmed' };

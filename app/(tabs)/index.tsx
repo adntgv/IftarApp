@@ -149,15 +149,26 @@ export default function HomeScreen() {
 
   // Handle responding to an event
   const handleRespond = async (id: string, status: string) => {
-    if (!selectedEvent) return;
-    
     try {
-      await respondToInvitation(
-        { $id: id, eventId: selectedEvent.$id },
-        status
-      );
+      if (!selectedEvent) {
+        // This is a direct response from the EventCard, not an invitation
+        // Show some loading indication
+        setRefreshing(true);
+        
+        await useEventsStore.getState().updateAttendanceStatus(id, status);
+        
+        // Hide loading indication
+        setRefreshing(false);
+      } else {
+        // This is a response to an invitation
+        await respondToInvitation(
+          { $id: id, eventId: selectedEvent.$id },
+          status
+        );
+      }
     } catch (error) {
       console.error('Error responding to event:', error);
+      setRefreshing(false);
     }
   };
 

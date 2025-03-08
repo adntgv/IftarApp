@@ -258,6 +258,21 @@ export const addAttendee = async (eventId, userId, name, status = 'pending', hos
       ]
     );
     
+    // For 'not-attending' status
+    if (status === 'not-attending') {
+      // If the user is already an attendee, delete the record
+      if (existingAttendees.documents.length > 0) {
+        await databases.deleteDocument(
+          ENV.DATABASE_ID,
+          ATTENDEES_COLLECTION_ID,
+          existingAttendees.documents[0].$id
+        );
+        return { status: 'not-attending' };
+      }
+      // If they're not an attendee, they're already 'not attending'
+      return { status: 'not-attending' };
+    }
+    
     // If the user is already an attendee, update their status
     if (existingAttendees.documents.length > 0) {
       return await databases.updateDocument(

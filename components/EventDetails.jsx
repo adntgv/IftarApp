@@ -7,6 +7,149 @@ import Input from './ui/Input';
 import Badge from './ui/Badge';
 import { useTheme } from './ThemeProvider';
 
+// Create styles outside component with a function pattern
+const createStyles = (colors, spacing) => StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    padding: spacing.spacing.md,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.spacing.lg,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.backgroundSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  host: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  description: {
+    marginTop: 16,
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: spacing.borderRadius.md,
+  },
+  descriptionText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  detailsContainer: {
+    marginTop: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
+  detailIcon: {
+    marginRight: 12,
+  },
+  detailLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  detailText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  attendeesContainer: {
+    marginTop: 8,
+  },
+  attendeeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  attendeeName: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  attendeeBadge: {
+    marginLeft: 8,
+  },
+  actionContainer: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  inviteForm: {
+    marginBottom: 8,
+  },
+  inviteButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  inviteButton: {
+    marginLeft: 8,
+  },
+  inviteSuccess: {
+    backgroundColor: colors.success + '20',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  inviteSuccessText: {
+    color: colors.success,
+    fontWeight: '500',
+  },
+  responseButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 24,
+  },
+  responseButton: {
+    flex: 0.48,
+  },
+});
+
 /**
  * EventDetails component for displaying detailed event information
  */
@@ -21,7 +164,10 @@ const EventDetails = ({
 }) => {
   const isModalVisible = isVisible !== undefined ? isVisible : isOpen;
   const { theme } = useTheme();
-  const { colors, typography, spacing } = theme;
+  const { colors, spacing } = theme;
+  
+  // Create styles with theme values
+  const styles = createStyles(colors, spacing);
   
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -229,153 +375,5 @@ const EventDetails = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    ...Platform.select({
-      ios: {
-        marginTop: 0, // iOS fix
-      }
-    })
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    height: 120,
-    backgroundColor: '#3b82f6',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    position: 'relative',
-    ...Platform.select({
-      ios: {
-        zIndex: 1, // Ensure proper rendering layer on iOS
-      }
-    })
-  },
-  iconCircle: {
-    position: 'absolute',
-    bottom: -24,
-    left: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  content: {
-    padding: 16,
-    paddingTop: 36,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 16, // Extra padding on iOS
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  host: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 24,
-  },
-  detailsContainer: {
-    marginBottom: 24,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  detailIcon: {
-    marginTop: 2,
-    marginRight: 12,
-  },
-  detailLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  detailText: {
-    fontSize: 15,
-    color: '#4b5563',
-  },
-  detailContent: {
-    flex: 1,
-  },
-  attendeesContainer: {
-    marginTop: 8,
-  },
-  attendeeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  attendeeName: {
-    fontSize: 14,
-    color: '#4b5563',
-    flex: 1,
-  },
-  attendeeBadge: {
-    marginLeft: 8,
-  },
-  actionContainer: {
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  inviteForm: {
-    marginBottom: 8,
-  },
-  inviteButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 8,
-  },
-  inviteButton: {
-    marginLeft: 8,
-  },
-  inviteSuccess: {
-    backgroundColor: '#d1fae5',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  inviteSuccessText: {
-    color: '#047857',
-    fontWeight: '500',
-  },
-  responseButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 24,
-  },
-  responseButton: {
-    flex: 0.48,
-  },
-});
 
 export default EventDetails; 

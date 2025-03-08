@@ -15,6 +15,43 @@ import { Calendar, List } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Create styles using a function pattern
+const createStyles = (colors, spacing) => StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    paddingBottom: 100, // Extra space at the bottom
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+  },
+  emptyIcon: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  emptyText: {
+    fontSize: 18,
+    marginBottom: 8,
+    textAlign: 'center',
+    color: colors.textSecondary,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
+    maxWidth: SCREEN_WIDTH * 0.8,
+    color: colors.textTertiary,
+  },
+});
+
 /**
  * Enhanced EventList component with animations and improved styling
  * @param {Object} props
@@ -42,7 +79,10 @@ const EventList = ({
   animation = '',
 }) => {
   const { theme } = useTheme();
-  const { colors, typography, spacing, animations } = theme;
+  const { colors, spacing } = theme;
+  
+  // Create styles with theme values
+  const styles = createStyles(colors, spacing);
   
   // Animation for list items to fade in
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -56,7 +96,7 @@ const EventList = ({
         toValue: 1,
         duration: 400,
         useNativeDriver: true,
-        easing: animations.easing.decelerate,
+        easing: theme.animations.easing.decelerate,
       }).start();
     }
   }, [events]);
@@ -97,7 +137,7 @@ const EventList = ({
         <ActivityIndicator size="large" color={colors.primary} />
       ) : (
         <>
-          <View style={[styles.emptyIcon, { backgroundColor: colors.backgroundSecondary }]}>
+          <View style={styles.emptyIcon}>
             {isInvites ? (
               <Calendar size={32} color={colors.primary} />
             ) : (
@@ -108,8 +148,7 @@ const EventList = ({
             style={[
               styles.emptyText,
               {
-                color: colors.textSecondary,
-                fontFamily: typography.fontFamily.medium,
+                fontFamily: theme.typography.fontFamily.medium,
               }
             ]}
           >
@@ -121,8 +160,7 @@ const EventList = ({
             style={[
               styles.emptySubtext,
               {
-                color: colors.textTertiary,
-                fontFamily: typography.fontFamily.regular,
+                fontFamily: theme.typography.fontFamily.regular,
               }
             ]}
           >
@@ -168,38 +206,5 @@ const EventList = ({
     />
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    paddingBottom: 100, // Extra space at the bottom
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  emptyIcon: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: 18,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
-    maxWidth: SCREEN_WIDTH * 0.8,
-  },
-});
 
 export default EventList; 

@@ -2,6 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '../ThemeProvider';
 
+// Create styles using a function pattern
+const createStyles = () => StyleSheet.create({
+  badge: {
+    alignSelf: 'flex-start',
+  },
+  text: {
+    textAlign: 'center',
+  },
+});
+
 /**
  * Badge component with theming
  */
@@ -15,7 +25,11 @@ const Badge = ({
   outlined = false,
 }) => {
   const { theme } = useTheme();
-  const { colors, spacing, typography } = theme;
+  const { colors, spacing } = theme;
+  const typography = theme.typography;
+  
+  // Create styles with theme values
+  const styles = createStyles();
   
   // Animation values
   const [scaleAnim] = React.useState(new Animated.Value(1));
@@ -118,14 +132,5 @@ const Badge = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  badge: {
-    alignSelf: 'flex-start',
-  },
-  text: {
-    textAlign: 'center',
-  },
-});
 
 export default Badge; 

@@ -5,6 +5,126 @@ import Card from './ui/Card';
 import Badge from './ui/Badge';
 import { useTheme } from './ThemeProvider';
 
+// Create styles using a function pattern
+const createStyles = (colors, spacing, typography) => StyleSheet.create({
+  card: {
+    borderLeftWidth: 0,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  title: {
+    flex: 1,
+    marginRight: 8,
+    color: colors.text,
+    fontSize: typography.fontSize.lg,
+    fontFamily: typography.fontFamily.medium,
+  },
+  statusBadge: {
+    marginLeft: 'auto',
+  },
+  content: {
+    flexDirection: 'row',
+  },
+  detailsContainer: {
+    flex: 1,
+  },
+  hostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  hostText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontFamily: typography.fontFamily.regular,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  detailText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontFamily: typography.fontFamily.regular,
+  },
+  badgesContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    flexDirection: 'row',
+    padding: 4,
+  },
+  badge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  attendanceControlContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  attendanceButton: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  attendanceButtonText: {
+    fontSize: 12,
+    marginLeft: 4,
+    fontFamily: typography.fontFamily.medium,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  acceptButton: {
+    marginRight: 8,
+  },
+  declineButton: {},
+  footer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  description: {
+    fontStyle: 'italic',
+    color: colors.textTertiary,
+    fontSize: typography.fontSize.sm,
+    fontFamily: typography.fontFamily.regular,
+  },
+});
+
 /**
  * Enhanced EventCard component with animations and improved styling
  */
@@ -16,7 +136,11 @@ const EventCard = ({
   animate = '' 
 }) => {
   const { theme } = useTheme();
-  const { colors, spacing, typography, animations } = theme;
+  const { colors, spacing } = theme;
+  const typography = theme.typography;
+  
+  // Create styles with theme values
+  const styles = createStyles(colors, spacing, typography);
   
   // Animation value for card
   const [scaleValue] = React.useState(new Animated.Value(1));
@@ -24,7 +148,7 @@ const EventCard = ({
   // Animation for pulse effect
   React.useEffect(() => {
     if (animate === 'pulse') {
-      animations.presets.pulse(scaleValue).start();
+      theme.animations.presets.pulse(scaleValue).start();
     }
   }, [animate, scaleValue]);
   
@@ -225,6 +349,81 @@ const EventCard = ({
               </TouchableOpacity>
             </View>
           )}
+          
+          {!isInvite && event.attendanceStatus && (
+            <View style={styles.attendanceControlContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.attendanceButton,
+                  { 
+                    backgroundColor: event.attendanceStatus === 'confirmed' ? colors.success : 'transparent',
+                    borderColor: colors.success,
+                    marginRight: 8 
+                  }
+                ]}
+                onPress={() => onRespond(event.$id, 'confirmed')}
+              >
+                <Check size={16} color={event.attendanceStatus === 'confirmed' ? '#FFFFFF' : colors.success} />
+                <Text 
+                  style={[
+                    styles.attendanceButtonText,
+                    { 
+                      color: event.attendanceStatus === 'confirmed' ? '#FFFFFF' : colors.success,
+                    }
+                  ]}
+                >
+                  Going
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.attendanceButton,
+                  { 
+                    backgroundColor: event.attendanceStatus === 'pending' ? colors.warning : 'transparent',
+                    borderColor: colors.warning,
+                    marginRight: 8 
+                  }
+                ]}
+                onPress={() => onRespond(event.$id, 'pending')}
+              >
+                <Clock size={16} color={event.attendanceStatus === 'pending' ? '#FFFFFF' : colors.warning} />
+                <Text 
+                  style={[
+                    styles.attendanceButtonText,
+                    { 
+                      color: event.attendanceStatus === 'pending' ? '#FFFFFF' : colors.warning,
+                    }
+                  ]}
+                >
+                  Maybe
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.attendanceButton,
+                  { 
+                    backgroundColor: event.attendanceStatus === 'not-attending' ? colors.error : 'transparent',
+                    borderColor: colors.error 
+                  }
+                ]}
+                onPress={() => onRespond(event.$id, 'not-attending')}
+              >
+                <X size={16} color={event.attendanceStatus === 'not-attending' ? '#FFFFFF' : colors.error} />
+                <Text 
+                  style={[
+                    styles.attendanceButtonText,
+                    { 
+                      color: event.attendanceStatus === 'not-attending' ? '#FFFFFF' : colors.error,
+                    }
+                  ]}
+                >
+                  No
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         
         {event.description && (
@@ -289,91 +488,5 @@ const EventCard = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    borderLeftWidth: 0,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    flex: 1,
-    marginRight: 8,
-  },
-  statusBadge: {
-    marginLeft: 'auto',
-  },
-  content: {
-    flexDirection: 'row',
-  },
-  detailsContainer: {
-    flex: 1,
-  },
-  hostContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  hostText: {
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailText: {
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  badgesContainer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    flexDirection: 'row',
-    padding: 4,
-  },
-  badge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    marginLeft: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  acceptButton: {
-    marginRight: 8,
-  },
-  declineButton: {},
-  footer: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
-  },
-  description: {
-    fontStyle: 'italic',
-  },
-});
 
 export default EventCard; 
