@@ -10,6 +10,21 @@ import { useTheme } from './ThemeProvider';
 // Import CSS for web styling
 if (Platform.OS === 'web') {
   import('./CreateEventForm.css');
+  
+  // Add global click handler to dismiss date/time pickers when clicking elsewhere
+  // This is only needed for web platforms
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', (e) => {
+      // If click is outside of a date/time input, blur any focused input
+      if (
+        document.activeElement && 
+        (document.activeElement.type === 'date' || document.activeElement.type === 'time') &&
+        !e.target.matches('input[type="date"], input[type="time"]')
+      ) {
+        document.activeElement.blur();
+      }
+    });
+  }
 }
 
 /**
@@ -88,7 +103,8 @@ const CreateEventForm = ({
 
   // Handle date change for native platforms
   const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    // Always hide the picker first, regardless of platform
+    setShowDatePicker(false);
     
     if (selectedDate) {
       // Validate date is not in the past
@@ -106,7 +122,8 @@ const CreateEventForm = ({
 
   // Handle time change for native platforms
   const handleTimeChange = (event, selectedTime) => {
-    setShowTimePicker(Platform.OS === 'ios');
+    // Always hide the picker first, regardless of platform
+    setShowTimePicker(false);
     
     if (selectedTime) {
       const formattedTime = format(selectedTime, 'HH:mm');
@@ -256,6 +273,13 @@ const CreateEventForm = ({
                 style={styles.webInput}
                 className="date-input"
                 placeholder="YYYY-MM-DD"
+                // Add onBlur handler to hide any open pickers
+                onBlur={() => {
+                  // Short timeout to allow the onChange event to process first
+                  setTimeout(() => {
+                    document.activeElement.blur();
+                  }, 100);
+                }}
               />
               <Calendar size={20} color={colors.textSecondary} style={styles.webInputIcon} />
             </View>
@@ -284,6 +308,13 @@ const CreateEventForm = ({
                 style={styles.webInput}
                 className="time-input"
                 placeholder="HH:MM"
+                // Add onBlur handler to hide any open pickers
+                onBlur={() => {
+                  // Short timeout to allow the onChange event to process first
+                  setTimeout(() => {
+                    document.activeElement.blur();
+                  }, 100);
+                }}
               />
               <Clock size={20} color={colors.textSecondary} style={styles.webInputIcon} />
             </View>
@@ -314,7 +345,12 @@ const CreateEventForm = ({
               styles.dateTimeButton,
               dateError ? styles.inputError : null
             ]}
-            onPress={() => setShowDatePicker(true)}
+            onPress={() => {
+              // Close time picker if open
+              setShowTimePicker(false);
+              // Open date picker
+              setShowDatePicker(true);
+            }}
             disabled={loading}
           >
             <Text style={styles.dateTimeText}>
@@ -332,7 +368,12 @@ const CreateEventForm = ({
               styles.dateTimeButton,
               timeError ? styles.inputError : null
             ]}
-            onPress={() => setShowTimePicker(true)}
+            onPress={() => {
+              // Close date picker if open
+              setShowDatePicker(false);
+              // Open time picker
+              setShowTimePicker(true);
+            }}
             disabled={loading}
           >
             <Text style={styles.dateTimeText}>
@@ -346,8 +387,20 @@ const CreateEventForm = ({
     );
   };
 
+  // Handle outside touch to dismiss pickers (for native)
+  const handleOutsideTouch = () => {
+    if (showDatePicker || showTimePicker) {
+      setShowDatePicker(false);
+      setShowTimePicker(false);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      activeOpacity={1} 
+      style={styles.container} 
+      onPress={handleOutsideTouch}
+    >
       <Text style={styles.title}>Create Iftar Event</Text>
       
       <Input
@@ -432,7 +485,7 @@ const CreateEventForm = ({
           title={loading ? "Creating..." : "Create Event"}
         />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

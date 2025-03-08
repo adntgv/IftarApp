@@ -27,12 +27,30 @@
   cursor: pointer;
 }
 
+/* Ensure the pickers dismiss on click outside */
+.date-input:focus:not(:focus-visible),
+.time-input:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* Firefox specific styles */
 @-moz-document url-prefix() {
   .date-input,
   .time-input {
     text-align: left;
   }
+  
+  /* Firefox needs extra help to dismiss pickers */
+  .date-input:focus, 
+  .time-input:focus {
+    box-shadow: none;
+  }
+}
+
+/* Ensure pickers dismiss when input field loses focus */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  visibility: visible !important;
 }
 
 /* Disabled state */
@@ -46,4 +64,21 @@
 .date-input:focus,
 .time-input:focus {
   background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Overlay to help dismiss the picker when clicking outside */
+body:has(.date-input:focus), 
+body:has(.time-input:focus) {
+  position: relative;
+}
+
+body:has(.date-input:focus)::before,
+body:has(.time-input:focus)::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
 }
