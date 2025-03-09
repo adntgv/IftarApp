@@ -475,7 +475,9 @@ const CreateEventForm = ({
           style={styles.cancelButton}
           title="Cancel"
           disabled={loading}
-        />
+        >
+          Cancel
+        </Button>
         <Button 
           variant="primary"
           icon={loading ? <ActivityIndicator size="small" color="white" /> : <Check size={18} color="white" />}

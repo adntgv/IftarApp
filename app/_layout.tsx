@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { AuthProvider } from '../context/AuthContext';
@@ -51,19 +51,7 @@ export default function RootLayout() {
       <ThemeProvider>
         <ErrorProvider>
           <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: {
-                backgroundColor: '#ffffff',
-              },
-              animation: 'slide_from_right',
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          </Stack>
+          <Slot />
         </ErrorProvider>
       </ThemeProvider>
     </AuthProvider>

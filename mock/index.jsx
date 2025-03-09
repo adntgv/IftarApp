@@ -1021,7 +1021,7 @@ const IftarApp = () => {
           </div>
         </div>
         
-        <div className="mt-6 space-y-2 text-left">
+        {/* <div className="mt-6 space-y-2 text-left">
           <h3 className="font-medium mb-2">Preferences</h3>
           <div className="flex items-center justify-between">
             <span>Notification Settings</span>
@@ -1035,7 +1035,7 @@ const IftarApp = () => {
             <span>Language</span>
             <Button variant="link">Edit</Button>
           </div>
-        </div>
+        </div> */}
         
         <Button 
           variant="secondary"

@@ -139,15 +139,15 @@ const ProfileView = ({
           </View>
         </View>
 
-        <View style={styles.accountInfoContainer}>
+        {/* <View style={styles.accountInfoContainer}>
           <Text style={styles.sectionTitle}>Account Information</Text>
           <View style={styles.accountInfoCard}>
             <Text style={styles.accountInfoLabel}>User ID</Text>
             <Text style={styles.accountInfoValue}>{userId || 'Not available'}</Text>
           </View>
-        </View>
+        </View> */}
         
-        <View style={styles.preferencesContainer}>
+        {/* <View style={styles.preferencesContainer}>
           <Text style={styles.sectionTitle}>Preferences</Text>
           <View style={styles.preferenceItem}>
             <Text style={styles.preferenceLabel}>Notification Settings</Text>
@@ -161,7 +161,7 @@ const ProfileView = ({
             <Text style={styles.preferenceLabel}>Language</Text>
             <Button variant="link" title="Edit" />
           </View>
-        </View>
+        </View> */}
         
         <Button 
           variant="secondary"

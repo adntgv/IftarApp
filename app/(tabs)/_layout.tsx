@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { Home, Plus, User } from 'lucide-react-native';
 
@@ -13,23 +13,20 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const { checkSession, isAuthenticated, isLoading } = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const result = await checkSession();
-        if (!result) {
-          // No valid session found, redirect to auth
-          router.replace('/(auth)/login');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.replace('/(auth)/login');
-      }
-    };
-
-    checkAuth();
+    setIsMounted(true);
+    return () => setIsMounted(false);
   }, []);
+
+  useEffect(() => {
+    // Only redirect if explicitly not authenticated
+    // This prevents unnecessary reloads on each tab navigation
+    if (isAuthenticated === false && !isLoading && isMounted) {
+      router.replace('/(auth)/login');
+    }
+  }, [isAuthenticated, isLoading, isMounted]);
 
   // Show nothing while checking auth
   if (isLoading) {

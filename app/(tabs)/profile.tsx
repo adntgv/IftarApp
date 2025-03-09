@@ -9,39 +9,37 @@ import Header from '@/components/Header';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { logout, user, account, checkSession, isLoading, error } = useAuthStore();
+  const { logout, user, account, checkSession, isLoading, error, isAuthenticated } = useAuthStore();
   const { events, invitations, fetchUserEvents, fetchUserInvitations } = useEventsStore();
   const [refreshing, setRefreshing] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const eventsCount = events.length;
   const invitesCount = invitations.length;
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Check auth status when component mounts
+  // Set mounted flag when component mounts
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const result = await checkSession();
-        if (!result) {
-          // No valid session found, redirect to auth
-          router.replace('/(auth)/login');
-        } else {
-          // Fetch events data
-          await fetchEvents();
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // Check auth status when component comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Only redirect if explicitly not authenticated AND component is mounted
+      if (isAuthenticated === false && isMounted) {
         router.replace('/(auth)/login');
       }
-    };
-
-    checkAuth();
-  }, []);
+    }, [isAuthenticated, isMounted])
+  );
   
-  // Refresh events when screen comes into focus
+  // Fetch events when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      fetchEvents();
-    }, [])
+      if (isAuthenticated) {
+        fetchEvents();
+      }
+    }, [isAuthenticated])
   );
   
   // Fetch both events and invitations
