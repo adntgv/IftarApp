@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { AuthProvider } from '../context/AuthContext';
 import { ErrorProvider } from '../context/ErrorContext';
+import { LocaleProvider } from '../context/LocaleContext';
 import { LogBox, Platform } from 'react-native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -53,8 +54,10 @@ export default function RootLayout() {
     <AuthProvider>
       <ThemeProvider>
         <ErrorProvider>
-          <StatusBar style="dark" />
-          <Slot />
+          <LocaleProvider>
+            <StatusBar style="dark" />
+            <Slot />
+          </LocaleProvider>
         </ErrorProvider>
       </ThemeProvider>
     </AuthProvider>

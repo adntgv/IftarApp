@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl, Modal } from 'react-native';
 import { User } from 'lucide-react-native';
 import Button from './ui/Button';
 import { createShadow } from '../utils/styles';
+import { useLocale, LOCALES } from '../context/LocaleContext';
+import { translate } from '../utils/translations';
 
 /**
  * ProfileView component for user profile
@@ -15,7 +17,9 @@ const ProfileView = ({
   onRefresh = () => {} 
 }) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const timeoutRef = useRef(null);
+  const { locale, changeLocale } = useLocale();
   
   // Debug log when props change
   useEffect(() => {
@@ -105,6 +109,60 @@ const ProfileView = ({
     invites: userData?.invitationsCount || 0
   };
   
+  const renderLanguageModal = () => (
+    <Modal
+      visible={showLanguageModal}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowLanguageModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>{translate(locale, 'profile.language')}</Text>
+          <View style={styles.languageOptions}>
+            <Button
+              variant={locale === LOCALES.ENGLISH ? 'primary' : 'secondary'}
+              onPress={() => {
+                changeLocale(LOCALES.ENGLISH);
+                setShowLanguageModal(false);
+              }}
+              style={styles.languageButton}
+            >
+              English
+            </Button>
+            <Button
+              variant={locale === LOCALES.KAZAKH ? 'primary' : 'secondary'}
+              onPress={() => {
+                changeLocale(LOCALES.KAZAKH);
+                setShowLanguageModal(false);
+              }}
+              style={styles.languageButton}
+            >
+              Қазақша
+            </Button>
+            <Button
+              variant={locale === LOCALES.RUSSIAN ? 'primary' : 'secondary'}
+              onPress={() => {
+                changeLocale(LOCALES.RUSSIAN);
+                setShowLanguageModal(false);
+              }}
+              style={styles.languageButton}
+            >
+              Русский
+            </Button>
+          </View>
+          <Button
+            variant="secondary"
+            onPress={() => setShowLanguageModal(false)}
+            style={styles.closeButton}
+          >
+            {translate(locale, 'common.cancel')}
+          </Button>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <ScrollView 
       style={styles.container}
@@ -147,21 +205,19 @@ const ProfileView = ({
           </View>
         </View> */}
         
-        {/* <View style={styles.preferencesContainer}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+        <View style={styles.preferencesContainer}>
+          <Text style={styles.sectionTitle}>{translate(locale, 'profile.preferences')}</Text>
           <View style={styles.preferenceItem}>
-            <Text style={styles.preferenceLabel}>Notification Settings</Text>
-            <Button variant="link" title="Edit" />
+            <Text style={styles.preferenceLabel}>{translate(locale, 'profile.language')}</Text>
+            <Button 
+              variant="ghost"
+              onPress={() => setShowLanguageModal(true)}
+              style={styles.editButton}
+            >
+              {translate(locale, 'common.edit')}
+            </Button>
           </View>
-          <View style={styles.preferenceItem}>
-            <Text style={styles.preferenceLabel}>Theme Options</Text>
-            <Button variant="link" title="Edit" />
-          </View>
-          <View style={styles.preferenceItem}>
-            <Text style={styles.preferenceLabel}>Language</Text>
-            <Button variant="link" title="Edit" />
-          </View>
-        </View> */}
+        </View>
         
         <Button 
           variant="secondary"
@@ -169,9 +225,10 @@ const ProfileView = ({
           fullWidth
           style={styles.signOutButton}
         >
-          Sign Out
+          {translate(locale, 'auth.signOut')}
         </Button>
       </View>
+      {renderLanguageModal()}
     </ScrollView>
   );
 };
@@ -295,16 +352,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: '#e5e7eb',
   },
   preferenceLabel: {
     fontSize: 16,
-    color: '#4b5563',
+    color: '#374151',
   },
   signOutButton: {
     marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  languageOptions: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  languageButton: {
+    width: '100%',
+  },
+  closeButton: {
+    marginTop: 12,
+  },
+  editButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
 });
 
