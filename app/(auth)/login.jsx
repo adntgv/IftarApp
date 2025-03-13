@@ -120,12 +120,9 @@ const LoginScreen = () => {
         
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Don't have an account?</Text>
-          <Button
-            variant="link"
-            title="Sign up"
-            onPress={goToSignup}
-            style={styles.signupButton}
-          />
+          <TouchableOpacity onPress={goToSignup}>
+            <Text style={styles.signupLink}>Sign Up</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -198,7 +195,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginRight: 5,
   },
-  signupButton: {
+  signupLink: {
     color: '#3b82f6',
     fontSize: 14,
     fontWeight: 'bold',
