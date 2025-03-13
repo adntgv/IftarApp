@@ -11,6 +11,8 @@ declare const EventList: FC<{
   animation?: string;
   onRefresh?: () => Promise<void>;
   refreshing?: boolean;
+  emptyMessage?: string;
+  ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
 }>;
 
 export default EventList; 

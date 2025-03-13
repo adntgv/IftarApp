@@ -12,7 +12,7 @@ const useEventsStore = create((set, get) => ({
   isLoading: false,
   error: null,
   isCreating: false,
-  viewMode: 'card',
+  viewMode: 'list',
   animation: '',
 
   // Set loading state
@@ -35,23 +35,10 @@ const useEventsStore = create((set, get) => ({
     }
   },
 
-  // Toggle view mode between card, list, and calendar
+  // Toggle view mode between list and calendar
   toggleViewMode: () => {
     const currentMode = get().viewMode;
-    let newMode;
-    switch (currentMode) {
-      case 'card':
-        newMode = 'list';
-        break;
-      case 'list':
-        newMode = 'calendar';
-        break;
-      case 'calendar':
-        newMode = 'card';
-        break;
-      default:
-        newMode = 'card';
-    }
+    const newMode = currentMode === 'list' ? 'calendar' : 'list';
     set({ viewMode: newMode });
     get().setAnimation('toggle');
   },

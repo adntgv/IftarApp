@@ -188,7 +188,7 @@ export default function HomeScreen() {
       <Header 
         title="Your Iftar Events" 
         action={toggleViewMode}
-        viewMode={viewMode}
+        actionLabel={viewMode === 'list' ? 'Calendar View' : 'List View'}
       />
       
       <View style={styles.content}>
