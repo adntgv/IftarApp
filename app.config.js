@@ -41,7 +41,7 @@ module.exports = ({ config }) => {
       ...envConfig[env],
       appEnv: env,
       eas: {
-        projectId: 'your-eas-project-id',
+        projectId: '880abff3-65d8-48a7-b468-fa0e9c74a547',
       },
     },
     updates: {
