@@ -199,72 +199,6 @@ const EventCard = ({
     }
   }, [animate, scaleValue]);
   
-  // Status badge color based on event status
-  const getStatusBadge = () => {
-    // If this is the user's own event, show a Host badge
-    if (isOwnEvent) {
-      return (
-        <Badge 
-          text="Host" 
-          variant="primary" 
-          size="small"
-          style={styles.statusBadge}
-        />
-      );
-    }
-    
-    if (isInvite) {
-      let variant = 'primary';
-      let text = 'Pending';
-      
-      if (event.status === 'confirmed') {
-        variant = 'success';
-        text = 'Confirmed';
-      } else if (event.status === 'declined') {
-        variant = 'error';
-        text = 'Declined';
-      } else {
-        variant = 'warning';
-        text = 'Pending';
-      }
-      
-      return (
-        <Badge 
-          text={text} 
-          variant={variant} 
-          size="small"
-          style={styles.statusBadge}
-        />
-      );
-    } else if (event.attendanceStatus) {
-      // Display attendance status for non-invite events
-      let variant = 'primary';
-      let text = 'Not Attending';
-      
-      if (event.attendanceStatus === 'confirmed') {
-        variant = 'success';
-        text = 'Attending';
-      } else if (event.attendanceStatus === 'pending') {
-        variant = 'warning';
-        text = 'Pending';
-      } else {
-        variant = 'neutral';
-        text = 'Not Attending';
-      }
-      
-      return (
-        <Badge 
-          text={text} 
-          variant={variant} 
-          size="small"
-          style={styles.statusBadge}
-        />
-      );
-    }
-    
-    return null;
-  };
-  
   // Host information display
   const renderHostInfo = () => {
     if (!event.isOtherUserEvent) return null;
@@ -313,7 +247,6 @@ const EventCard = ({
           >
             {event.title}
           </Text>
-          {getStatusBadge()}
         </View>
         
         <View style={styles.content}>
