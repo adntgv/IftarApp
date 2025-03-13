@@ -84,7 +84,11 @@ const EventPage = () => {
   }, [id]);
 
   const handleBack = () => {
-    router.back();
+    router.push('/');
+  };
+
+  const handleLogin = () => {
+    router.push('/login');
   };
 
   if (loading) {
@@ -152,6 +156,7 @@ const EventPage = () => {
       isVisible={true}
       onClose={handleBack}
       isLoggedIn={isLoggedIn}
+      onLogin={handleLogin}
     />
   );
 };
