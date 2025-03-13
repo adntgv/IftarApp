@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
   TouchableOpacity, 
   Animated, 
-  Pressable 
+  Pressable,
+  Platform,
 } from 'react-native';
 import { useTheme } from '../ThemeProvider';
 
@@ -26,40 +27,46 @@ const Card = ({
   
   // Animation values
   const [scaleValue] = React.useState(new Animated.Value(1));
-  const [shadowOpacity] = React.useState(new Animated.Value(1));
   
   // Handle press animations
   const handlePressIn = () => {
     if (animate && onPress) {
-      Animated.parallel([
-        Animated.timing(scaleValue, {
-          toValue: 0.98,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shadowOpacity, {
-          toValue: 0.8,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Animated.timing(scaleValue, {
+        toValue: 0.98,
+        duration: 150,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
     }
   };
   
   const handlePressOut = () => {
     if (animate && onPress) {
-      Animated.parallel([
-        Animated.timing(scaleValue, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shadowOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Animated.timing(scaleValue, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
+    }
+  };
+  
+  // Get shadow styles based on platform
+  const getShadowStyle = () => {
+    const shadowConfig = spacing.elevation[elevation] || {};
+    
+    if (Platform.OS === 'web') {
+      // Use boxShadow for web
+      const { shadowOffset = { width: 0, height: 2 }, shadowRadius = 4, shadowOpacity = 0.1 } = shadowConfig;
+      const offsetX = shadowOffset.width;
+      const offsetY = shadowOffset.height;
+      const blur = shadowRadius;
+      const opacity = shadowOpacity;
+      
+      return {
+        boxShadow: `${offsetX}px ${offsetY}px ${blur}px rgba(0, 0, 0, ${opacity})`
+      };
+    } else {
+      // Use native shadow props for iOS/Android
+      return shadowConfig;
     }
   };
   
@@ -72,7 +79,7 @@ const Card = ({
       borderColor: borderColor || colors.borderLight,
       borderWidth: borderColor ? 1 : 0,
       ...(padding && { padding: spacing.spacing.md }),
-      ...spacing.elevation[elevation],
+      ...getShadowStyle(),
     },
     style,
   ];
@@ -97,10 +104,6 @@ const Card = ({
           ...cardStyles,
           {
             transform: [{ scale: scaleValue }],
-            shadowOpacity: Animated.multiply(
-              shadowOpacity,
-              new Animated.Value(spacing.elevation[elevation].shadowOpacity || 0.1)
-            ),
           },
         ]}
       >

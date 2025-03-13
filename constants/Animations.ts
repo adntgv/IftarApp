@@ -3,7 +3,7 @@
  * Provides consistent animation presets and values throughout the app
  */
 
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 
 // Duration values in milliseconds
 const duration = {
@@ -36,7 +36,7 @@ const presets = {
       toValue: 1,
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   fadeOut: (
@@ -48,7 +48,7 @@ const presets = {
       toValue: 0,
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   
@@ -62,7 +62,7 @@ const presets = {
       toValue: 1,
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   scaleOut: (
@@ -74,7 +74,7 @@ const presets = {
       toValue: 0,
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   
@@ -89,7 +89,7 @@ const presets = {
       toValue: { x: 0, y: 0 },
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   slideOutLeft: (
@@ -102,7 +102,7 @@ const presets = {
       toValue: { x: -distance, y: 0 },
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   slideInRight: (
@@ -115,7 +115,7 @@ const presets = {
       toValue: { x: 0, y: 0 },
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   slideOutRight: (
@@ -128,7 +128,7 @@ const presets = {
       toValue: { x: distance, y: 0 },
       duration: durationTime,
       easing: easingFunction,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
   },
   
@@ -142,13 +142,13 @@ const presets = {
         toValue: 1.05,
         duration: durationTime / 2,
         easing: easing.standard,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(value, {
         toValue: 1,
         duration: durationTime / 2,
         easing: easing.standard,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]);
   },
@@ -160,27 +160,27 @@ const presets = {
       Animated.timing(value, {
         toValue: 10,
         duration: durationTime / 5,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(value, {
         toValue: -10, 
         duration: durationTime / 5,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(value, {
         toValue: 5,
         duration: durationTime / 5,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(value, {
         toValue: -5,
         duration: durationTime / 5,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(value, {
         toValue: 0,
         duration: durationTime / 5,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     ]);
   },

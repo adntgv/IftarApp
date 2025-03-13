@@ -45,7 +45,7 @@ const Button = ({
       Animated.timing(scaleValue, {
         toValue: 0.96,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     }
   };
@@ -55,7 +55,7 @@ const Button = ({
       Animated.timing(scaleValue, {
         toValue: 1,
         duration: 150,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     }
   };
@@ -139,7 +139,7 @@ const Button = ({
       borderWidth: 1,
       color: disabled ? (colors?.textTertiary || '#8c8c8c') : (colors?.primary || '#1890ff'),
     },
-    outline: {
+    outlined: {
       backgroundColor: 'transparent',
       borderColor: disabled ? (colors?.border || '#e8e8e8') : (colors?.border || '#e8e8e8'),
       borderWidth: 1,

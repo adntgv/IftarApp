@@ -9,7 +9,8 @@ import {
   Dimensions,
   Pressable,
   ScrollView,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useTheme } from '../ThemeProvider';
@@ -51,12 +52,12 @@ const Modal = ({
         Animated.timing(backdropAnim, {
           toValue: backdropOpacity,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(contentAnim, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start();
     } else {
@@ -65,12 +66,12 @@ const Modal = ({
         Animated.timing(backdropAnim, {
           toValue: 0,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(contentAnim, {
           toValue: 0,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start(() => {
         // After animation completes, stop rendering the modal

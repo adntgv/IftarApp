@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { AuthProvider } from '../context/AuthContext';
 import { ErrorProvider } from '../context/ErrorContext';
-import { LogBox } from 'react-native';
+import { LogBox, Platform } from 'react-native';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 import { useEffect } from 'react';
@@ -26,8 +26,11 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   // Set navigation bar color for Android
   useEffect(() => {
-    NavigationBar.setBackgroundColorAsync('#ffffff');
-    NavigationBar.setButtonStyleAsync('dark');
+    // Only run on Android platform
+    if (Platform.OS === 'android') {
+      NavigationBar.setBackgroundColorAsync('#ffffff');
+      NavigationBar.setButtonStyleAsync('dark');
+    }
   }, []);
 
   // Check if onboarded

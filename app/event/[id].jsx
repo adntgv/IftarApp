@@ -5,7 +5,7 @@ import { format, parseISO } from 'date-fns';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import PublicEventView from '../../components/PublicEventView';
-import { getEventByShareCode } from '../../utils/eventService';
+import eventService from '../../utils/eventService';
 import useAuthStore from '../../hooks/useAuth';
 import { getCurrentUser } from '../../utils/appwrite';
 import EventDetails from '../../components/EventDetails';
@@ -14,7 +14,7 @@ import EventDetails from '../../components/EventDetails';
 const fetchEventByShareCode = async (shareCode) => {
   try {
     console.log('Fetching event with share code:', shareCode);
-    return await getEventByShareCode(shareCode);
+    return await eventService.getEventByShareCode(shareCode);
   } catch (error) {
     console.error('Error fetching event:', error);
     return null;
@@ -39,19 +39,36 @@ const EventPage = () => {
         const userResult = await getCurrentUser();
         setCurrentUser(userResult);
         
+        console.log('Fetching event with ID:', id);
         // Get event details
-        const eventData = await eventService.getEvent(id);
+        const eventData = await eventService.getEventById(id);
+        console.log('Event data received:', JSON.stringify(eventData));
+        
+        // Make a copy to avoid modifying the original object
+        const processedEvent = { ...eventData };
         
         // Format date if needed
-        if (eventData && eventData.date && typeof eventData.date === 'string') {
-          const formattedDate = format(
-            parseISO(eventData.date.includes('T') ? eventData.date : `${eventData.date}T00:00:00`), 
-            'MMMM d, yyyy'
-          );
-          eventData.formattedDate = formattedDate;
+        try {
+          if (processedEvent.date && typeof processedEvent.date === 'string') {
+            const dateStr = processedEvent.date.includes('T') 
+              ? processedEvent.date 
+              : `${processedEvent.date}T00:00:00`;
+            
+            console.log('Parsing date:', dateStr);
+            const parsedDate = parseISO(dateStr);
+            console.log('Parsed date object:', parsedDate);
+            
+            const formattedDate = format(parsedDate, 'MMMM d, yyyy');
+            console.log('Formatted date:', formattedDate);
+            
+            processedEvent.formattedDate = formattedDate;
+          }
+        } catch (dateError) {
+          console.error('Error formatting date:', dateError);
+          // Continue without formatted date if there's an error
         }
         
-        setEvent(eventData);
+        setEvent(processedEvent);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching event:', err);
@@ -100,10 +117,31 @@ const EventPage = () => {
 
   // Prepare data for EventDetails component
   const eventDetailsData = {
-    ...event,
-    // Use formatted date if available
-    date: event.formattedDate || event.date,
-    host: event.hostName || 'Event Host'
+    // Set default values for all required fields
+    title: event?.title || 'Event',
+    date: event?.formattedDate || event?.date || 'Date not available',
+    time: event?.time || 'Time not available',
+    location: event?.location || 'Location not available',
+    description: event?.description || '',
+    host: event?.hostName || 'Event Host',
+    // Ensure we pass any other available fields from the event
+    ...event
+  };
+  
+  // Handlers for EventDetails actions
+  const handleShare = () => {
+    console.log('Share event:', event.$id);
+    // Share functionality would go here
+  };
+
+  const handleInvite = (email) => {
+    console.log('Invite to event:', event.$id, 'Email:', email);
+    // Invite functionality would go here
+  };
+
+  const handleRespond = (eventId, status) => {
+    console.log('Respond to event:', eventId, 'Status:', status);
+    // Respond functionality would go here
   };
   
   return (
@@ -111,6 +149,9 @@ const EventPage = () => {
       event={eventDetailsData}
       isModalVisible={true}
       onClose={handleBack}
+      onShare={handleShare}
+      onInvite={handleInvite}
+      onRespond={handleRespond}
     />
   );
 };

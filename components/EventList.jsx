@@ -7,7 +7,8 @@ import {
   RefreshControl,
   Animated,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import EventCard from './EventCard';
 import { useTheme } from './ThemeProvider';
@@ -95,7 +96,7 @@ const EventList = ({
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
         easing: theme.animations.easing.decelerate,
       }).start();
     }

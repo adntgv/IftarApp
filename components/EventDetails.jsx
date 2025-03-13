@@ -224,9 +224,18 @@ const EventDetails = ({
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date & Time</Text>
                   <Text style={styles.detailText}>
-                    {event.date && typeof event.date === 'string' 
-                      ? format(parseISO(event.date.includes('T') ? event.date : `${event.date}T00:00:00`), 'MMMM d, yyyy')
-                      : event.date} at {event.time}
+                    {(() => {
+                      try {
+                        if (event.date && typeof event.date === 'string') {
+                          const dateStr = event.date.includes('T') ? event.date : `${event.date}T00:00:00`;
+                          return format(parseISO(dateStr), 'MMMM d, yyyy');
+                        }
+                        return event.date || 'Date not specified';
+                      } catch (err) {
+                        console.error('Error formatting date in EventDetails:', err);
+                        return event.date || 'Date not specified';
+                      }
+                    })()} at {event.time || 'Time not specified'}
                   </Text>
                 </View>
               </View>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { useTheme } from '../ThemeProvider';
 
 // Create styles using a function pattern
@@ -33,22 +33,40 @@ const Badge = ({
   
   // Animation values
   const [scaleAnim] = React.useState(new Animated.Value(1));
+  const [opacityAnim] = React.useState(new Animated.Value(0));
   
   // Pulse animation when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     if (pulseOnMount) {
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 1.2,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start();
+    }
+  }, []);
+  
+  // Animation when badge shows
+  useEffect(() => {
+    if (pulseOnMount) {
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
+      
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
     }
   }, []);
   

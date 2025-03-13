@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Animated, Pressable, Platform } from 'react-native';
 import { Home, Bell, Plus, Calendar, User } from 'lucide-react-native';
 import Button from './ui/Button';
 import { useTheme } from './ThemeProvider';
@@ -137,10 +137,15 @@ const styles = StyleSheet.create({
     padding: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
+    ...(Platform.OS === 'web' 
+      ? { boxShadow: '0px 2px 5px rgba(59, 130, 246, 0.3)' }
+      : {
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 5,
+          elevation: 8,
+        }
+    ),
   },
 });
 

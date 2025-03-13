@@ -496,11 +496,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...(Platform.OS === 'web' 
+      ? { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 2,
+        }
+    ),
     marginTop: 16,
   },
   title: {
@@ -564,11 +569,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#4b5563',
     borderWidth: 0,
-    outline: 'none',
     backgroundColor: 'transparent',
     appearance: 'none',
     WebkitAppearance: 'none',
-    MozAppearance: 'none',
   },
   webInputIcon: {
     position: 'absolute',
