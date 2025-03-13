@@ -12,12 +12,24 @@ import { getCurrentUser } from '../../utils/appwrite';
 const EventPage = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { isLoggedIn, user } = useAuthStore();
+  const { isLoggedIn, user, checkSession } = useAuthStore();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
+
+  // Check session on mount
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        await checkSession();
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+    initSession();
+  }, []);
 
   // Fetch event details
   useEffect(() => {
@@ -33,8 +45,12 @@ const EventPage = () => {
         const eventData = await eventService.getEventById(id);
         console.log('Event data received:', JSON.stringify(eventData));
         
+        // Get attendees for this event
+        const attendees = await eventService.getEventAttendees(id);
+        console.log('Attendees data received:', JSON.stringify(attendees));
+        
         // Make a copy to avoid modifying the original object
-        const processedEvent = { ...eventData };
+        const processedEvent = { ...eventData, attendees };
         
         // Check if current user is the author
         if (userResult && userResult.account && processedEvent.hostId === userResult.account.$id) {
@@ -166,6 +182,7 @@ const EventPage = () => {
         throw new Error('User not logged in');
       }
 
+      // Add the attendee
       await eventService.addAttendee(
         eventId,
         currentUser.account.$id,
@@ -174,9 +191,16 @@ const EventPage = () => {
         event.hostId
       );
       
-      // Refresh event data to show updated attendance
-      const updatedEvent = await eventService.getEventById(eventId);
-      setEvent(updatedEvent);
+      // Get updated attendees list
+      const attendees = await eventService.getEventAttendees(eventId);
+      
+      // Update the event state with new attendees
+      setEvent(prevEvent => ({
+        ...prevEvent,
+        attendees
+      }));
+      
+      alert('Attendance updated successfully!');
     } catch (error) {
       console.error('Error responding to event:', error);
       alert('Failed to update attendance. Please try again.');
@@ -195,6 +219,7 @@ const EventPage = () => {
       onShare={handleShare}
       onInvite={handleInvite}
       onRespond={handleRespond}
+      currentUser={currentUser}
     />
   );
 };

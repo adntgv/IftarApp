@@ -21,11 +21,17 @@ const PublicEventView = ({
   isAuthor,
   onShare,
   onInvite,
-  onRespond 
+  onRespond,
+  currentUser 
 }) => {
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteSent, setInviteSent] = useState(false);
+  
+  // Get current user's attendance status
+  const currentUserAttendance = event?.attendees?.find(
+    attendee => attendee.userId === currentUser?.account?.$id
+  );
   
   // Reset invite sent status
   React.useEffect(() => {
@@ -260,12 +266,20 @@ const PublicEventView = ({
                   Invite Guests
                 </Button>
               </View>
+            ) : currentUserAttendance?.status === 'confirmed' ? (
+              <Button
+                variant="secondary"
+                title="Revoke Attendance"
+                icon={<X size={18} color="#4b5563" />}
+                onPress={() => onRespond && onRespond(event.$id, 'not-attending')}
+                style={styles.actionButton}
+              />
             ) : (
               <Button
                 variant="primary"
                 title="I'm Attending"
                 icon={<Check size={18} color="white" />}
-                onPress={() => onRespond && onRespond(event.id, 'confirmed')}
+                onPress={() => onRespond && onRespond(event.$id, 'confirmed')}
                 style={styles.actionButton}
               />
             )}
