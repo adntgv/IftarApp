@@ -83,8 +83,8 @@ export default function CreateScreen() {
       // Fetch updated events to refresh the list
       await fetchUserEvents();
       
-      // Navigate to home tab
-      router.navigate('/(tabs)');
+      // Navigate to event details page
+      router.navigate(`/event/${event.$id}`);
     } catch (error) {
       console.error('Error creating event:', error);
       Alert.alert('Error', 'Failed to create event. Please try again.');
