@@ -11,6 +11,7 @@ import useEventsStore from '@/hooks/useEvents';
 import useAuthStore from '@/hooks/useAuth';
 import { Event } from '@/types/event';
 import { EventLike } from '@/types/event';
+import CalendarView from '@/components/CalendarView';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -187,19 +188,29 @@ export default function HomeScreen() {
       <Header 
         title="Your Iftar Events" 
         action={toggleViewMode}
-        actionLabel={viewMode === 'card' ? 'List View' : 'Card View'}
+        viewMode={viewMode}
       />
       
       <View style={styles.content}>
-        <EventList 
-          events={getAllEvents()} 
-          viewMode={viewMode} 
-          onOpenEvent={handleOpenEvent}
-          onRespond={handleRespond}
-          animation={animation}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
-        />
+        {viewMode === 'calendar' ? (
+          <CalendarView 
+            events={getAllEvents()} 
+            onOpenEvent={handleOpenEvent}
+            onRespond={handleRespond}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+          />
+        ) : (
+          <EventList 
+            events={getAllEvents()} 
+            viewMode={viewMode} 
+            onOpenEvent={handleOpenEvent}
+            onRespond={handleRespond}
+            animation={animation}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+          />
+        )}
       </View>
     </View>
   );

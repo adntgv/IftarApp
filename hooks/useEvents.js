@@ -35,9 +35,23 @@ const useEventsStore = create((set, get) => ({
     }
   },
 
-  // Toggle view mode between card and list
+  // Toggle view mode between card, list, and calendar
   toggleViewMode: () => {
-    const newMode = get().viewMode === 'card' ? 'list' : 'card';
+    const currentMode = get().viewMode;
+    let newMode;
+    switch (currentMode) {
+      case 'card':
+        newMode = 'list';
+        break;
+      case 'list':
+        newMode = 'calendar';
+        break;
+      case 'calendar':
+        newMode = 'card';
+        break;
+      default:
+        newMode = 'card';
+    }
     set({ viewMode: newMode });
     get().setAnimation('toggle');
   },

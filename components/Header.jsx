@@ -14,6 +14,7 @@ import { useTheme } from './ThemeProvider';
  * @param {Function} [props.onMenuPress=()=>{}] - Function to call when menu is pressed
  * @param {boolean} [props.showSearch=false] - Whether to show the search button
  * @param {Function} [props.onSearchPress=()=>{}] - Function to call when search is pressed
+ * @param {string} [props.viewMode='card'] - Current view mode (card, list, or calendar)
  */
 const Header = ({ 
   title, 
@@ -23,6 +24,7 @@ const Header = ({
   onMenuPress = () => {},
   showSearch = false,
   onSearchPress = () => {},
+  viewMode = 'card',
 }) => {
   const { theme } = useTheme();
   const { colors, typography, spacing, animations } = theme;
@@ -142,7 +144,7 @@ const Header = ({
                 fontFamily: typography.fontFamily.medium,
               }}
             >
-              {actionLabel || 'List View'}
+              {actionLabel || (viewMode === 'card' ? 'List View' : viewMode === 'list' ? 'Calendar View' : 'Card View')}
             </Button>
           )}
         </View>
