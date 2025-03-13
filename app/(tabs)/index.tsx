@@ -96,8 +96,12 @@ export default function HomeScreen() {
 
   // Open event details
   const handleOpenEvent = (event: EventLike) => {
-    setSelectedEvent(event as Event);
-    setAnimation('open');
+    // Instead of opening the event in the current view, redirect to the event detail page
+    router.push(`/event/${event.$id}`);
+    
+    // Keep the existing functionality commented in case you want to revert back
+    // setSelectedEvent(event as Event);
+    // setAnimation('open');
   };
 
   // Close event details
