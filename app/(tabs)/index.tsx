@@ -201,35 +201,6 @@ export default function HomeScreen() {
           refreshing={refreshing}
         />
       </View>
-
-      {/* Modals */}
-      <EventDetails 
-        event={selectedEvent} 
-        isVisible={selectedEvent !== null} 
-        onClose={handleCloseEvent}
-        onRespond={handleRespond}
-        onShare={handleOpenShareModal}
-        onInvite={(email) => selectedEvent && handleInvite(selectedEvent.$id, email)}
-      />
-      
-      <ShareModal 
-        event={selectedEvent} 
-        isOpen={showShareModal}
-        isVisible={showShareModal} 
-        onClose={handleCloseShareModal}
-        shareLink={getShareLink(selectedEvent)}
-        onPreviewPublic={handleViewPublicEvent}
-      />
-      
-      <PublicEventView 
-        event={publicViewEvent} 
-        isOpen={showPublicView}
-        isVisible={showPublicView}
-        onClose={() => setShowPublicView(false)} 
-        isLoggedIn={isLoggedIn}
-        onLogin={() => router.push('/login')}
-        onRespond={handleRespond}
-      />
     </View>
   );
 }

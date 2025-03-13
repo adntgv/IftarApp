@@ -102,7 +102,6 @@ const PublicEventView = ({
   }, [event]);
   
   return (
-    <Modal isVisible={isModalVisible} onClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Header background */}
@@ -226,7 +225,6 @@ const PublicEventView = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-    </Modal>
   );
 };
 

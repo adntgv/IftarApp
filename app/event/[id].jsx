@@ -9,6 +9,7 @@ import eventService from '../../utils/eventService';
 import useAuthStore from '../../hooks/useAuth';
 import { getCurrentUser } from '../../utils/appwrite';
 import EventDetails from '../../components/EventDetails';
+import EventCard from '../../components/EventCard';
 
 // Fetch event by share code using the eventService
 const fetchEventByShareCode = async (shareCode) => {
@@ -145,13 +146,12 @@ const EventPage = () => {
   };
   
   return (
-    <EventDetails
-      event={eventDetailsData}
-      isModalVisible={true}
+    <PublicEventView
+      event={event}
+      isOpen={true}
+      isVisible={true}
       onClose={handleBack}
-      onShare={handleShare}
-      onInvite={handleInvite}
-      onRespond={handleRespond}
+      isLoggedIn={isLoggedIn}
     />
   );
 };

@@ -198,11 +198,10 @@ const EventDetails = ({
       setInviteEmail('');
     }, 1500);
   };
-  
+
   if (!event) return null;
 
   return (
-    <Modal isVisible={isModalVisible} onClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
@@ -386,7 +385,6 @@ const EventDetails = ({
           </View>
         </ScrollView>
       </SafeAreaView>
-    </Modal>
   );
 };
 
