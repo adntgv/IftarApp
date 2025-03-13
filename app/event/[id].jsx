@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView, Platform, Clipboard } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO } from 'date-fns';
 import Card from '../../components/ui/Card';
@@ -8,19 +8,6 @@ import PublicEventView from '../../components/PublicEventView';
 import eventService from '../../utils/eventService';
 import useAuthStore from '../../hooks/useAuth';
 import { getCurrentUser } from '../../utils/appwrite';
-import EventDetails from '../../components/EventDetails';
-import EventCard from '../../components/EventCard';
-
-// Fetch event by share code using the eventService
-const fetchEventByShareCode = async (shareCode) => {
-  try {
-    console.log('Fetching event with share code:', shareCode);
-    return await eventService.getEventByShareCode(shareCode);
-  } catch (error) {
-    console.error('Error fetching event:', error);
-    return null;
-  }
-};
 
 const EventPage = () => {
   const { id } = useLocalSearchParams();
@@ -30,6 +17,7 @@ const EventPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthor, setIsAuthor] = useState(false);
 
   // Fetch event details
   useEffect(() => {
@@ -47,6 +35,11 @@ const EventPage = () => {
         
         // Make a copy to avoid modifying the original object
         const processedEvent = { ...eventData };
+        
+        // Check if current user is the author
+        if (userResult && userResult.account && processedEvent.hostId === userResult.account.$id) {
+          setIsAuthor(true);
+        }
         
         // Format date if needed
         try {
@@ -119,34 +112,75 @@ const EventPage = () => {
       </SafeAreaView>
     );
   }
-
-  // Prepare data for EventDetails component
-  const eventDetailsData = {
-    // Set default values for all required fields
-    title: event?.title || 'Event',
-    date: event?.formattedDate || event?.date || 'Date not available',
-    time: event?.time || 'Time not available',
-    location: event?.location || 'Location not available',
-    description: event?.description || '',
-    host: event?.hostName || 'Event Host',
-    // Ensure we pass any other available fields from the event
-    ...event
-  };
-  
+ 
   // Handlers for EventDetails actions
-  const handleShare = () => {
-    console.log('Share event:', event.$id);
-    // Share functionality would go here
+  const handleShare = async () => {
+    try {
+      // Generate the share URL
+      const shareUrl = `${window.location.origin}/event/${event.$id}`;
+      
+      if (Platform.OS === 'web') {
+        // Web platform
+        if (navigator.share) {
+          await navigator.share({
+            title: event.title,
+            text: `Join me for ${event.title} on ${event.formattedDate} at ${event.time}`,
+            url: shareUrl
+          });
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          alert('Share link copied to clipboard!');
+        }
+      } else {
+        // Mobile platforms
+        await Clipboard.setString(shareUrl);
+        alert('Share link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing event:', error);
+    }
   };
 
-  const handleInvite = (email) => {
-    console.log('Invite to event:', event.$id, 'Email:', email);
-    // Invite functionality would go here
+  const handleInvite = async (email) => {
+    try {
+      if (!currentUser?.account?.$id) {
+        throw new Error('User not logged in');
+      }
+
+      await eventService.createInvitation(
+        event.$id,
+        currentUser.account.$id,
+        email
+      );
+      
+      alert('Invitation sent successfully!');
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      alert('Failed to send invitation. Please try again.');
+    }
   };
 
-  const handleRespond = (eventId, status) => {
-    console.log('Respond to event:', eventId, 'Status:', status);
-    // Respond functionality would go here
+  const handleRespond = async (eventId, status) => {
+    try {
+      if (!currentUser?.account?.$id) {
+        throw new Error('User not logged in');
+      }
+
+      await eventService.addAttendee(
+        eventId,
+        currentUser.account.$id,
+        currentUser.user.name || 'Guest',
+        status,
+        event.hostId
+      );
+      
+      // Refresh event data to show updated attendance
+      const updatedEvent = await eventService.getEventById(eventId);
+      setEvent(updatedEvent);
+    } catch (error) {
+      console.error('Error responding to event:', error);
+      alert('Failed to update attendance. Please try again.');
+    }
   };
   
   return (
@@ -157,6 +191,10 @@ const EventPage = () => {
       onClose={handleBack}
       isLoggedIn={isLoggedIn}
       onLogin={handleLogin}
+      isAuthor={isAuthor}
+      onShare={handleShare}
+      onInvite={handleInvite}
+      onRespond={handleRespond}
     />
   );
 };

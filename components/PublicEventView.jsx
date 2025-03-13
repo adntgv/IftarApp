@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ImageBackground, Animated, Platform, SafeAreaView, TouchableOpacity } from 'react-native';
-import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check } from 'lucide-react-native';
+import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check, Share2, Send } from 'lucide-react-native';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import Button from './ui/Button';
 import Card from './ui/Card';
-import * as Linking from 'expo-linking';
+import Input from './ui/Input';
 import Modal from './ui/Modal';
+import * as Linking from 'expo-linking';
 
 /**
  * PublicEventView component for publicly sharing events
@@ -16,9 +17,36 @@ const PublicEventView = ({
   isVisible,
   onClose, 
   isLoggedIn, 
-  onLogin, 
+  onLogin,
+  isAuthor,
+  onShare,
+  onInvite,
   onRespond 
 }) => {
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSent, setInviteSent] = useState(false);
+  
+  // Reset invite sent status
+  React.useEffect(() => {
+    if (inviteSent) {
+      const timer = setTimeout(() => {
+        setInviteSent(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [inviteSent]);
+
+  // Handle send invitation
+  const handleSendInvite = async () => {
+    if (onInvite && inviteEmail.trim()) {
+      await onInvite(inviteEmail.trim());
+      setInviteSent(true);
+      setInviteEmail('');
+      setShowInviteForm(false);
+    }
+  };
+
   // Use either isVisible or isOpen prop, preferring isVisible if provided
   const isModalVisible = isVisible !== undefined ? isVisible : isOpen;
   
@@ -213,6 +241,25 @@ const PublicEventView = ({
                 onPress={onLogin}
                 style={styles.actionButton}
               />
+            ) : isAuthor ? (
+              <View style={styles.actionButtons}>
+                <Button 
+                  variant="primary"
+                  icon={<Share2 size={18} color="#ffffff" />}
+                  onPress={() => onShare?.(event)}
+                  style={styles.actionButton}
+                >
+                  Share Event
+                </Button>
+                <Button 
+                  variant="secondary"
+                  icon={<Send size={18} color="#4b5563" />}
+                  onPress={() => setShowInviteForm(true)}
+                  style={styles.actionButton}
+                >
+                  Invite Guests
+                </Button>
+              </View>
             ) : (
               <Button
                 variant="primary"
@@ -223,6 +270,49 @@ const PublicEventView = ({
               />
             )}
           </View>
+
+          {/* Invite Form Modal */}
+          <Modal
+            isVisible={showInviteForm}
+            onClose={() => setShowInviteForm(false)}
+            title="Invite Guests"
+          >
+            <View style={styles.inviteForm}>
+              <Input
+                label="Email Address"
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+                placeholder="friend@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <View style={styles.inviteButtons}>
+                <Button 
+                  variant="secondary"
+                  onPress={() => setShowInviteForm(false)}
+                  style={styles.inviteButton}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="primary"
+                  icon={<Send size={16} color="#ffffff" />}
+                  onPress={handleSendInvite}
+                  disabled={!inviteEmail.trim()}
+                  style={styles.inviteButton}
+                >
+                  Send Invite
+                </Button>
+              </View>
+              {inviteSent && (
+                <View style={styles.inviteSuccess}>
+                  <Text style={styles.inviteSuccessText}>
+                    Invitation sent successfully!
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Modal>
         </ScrollView>
       </SafeAreaView>
   );
@@ -403,6 +493,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
     marginTop: 2,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inviteForm: {
+    padding: 16,
+  },
+  inviteButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 16,
+  },
+  inviteButton: {
+    marginLeft: 8,
+  },
+  inviteSuccess: {
+    backgroundColor: '#dcfce7',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  inviteSuccessText: {
+    color: '#16a34a',
+    fontWeight: '500',
   },
 });
 
