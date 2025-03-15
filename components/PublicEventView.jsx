@@ -242,7 +242,7 @@ const PublicEventView = ({
             {!isLoggedIn ? (
               <Button
                 variant="primary"
-                title="Log in to Respond"
+                title="Are you going? Log in to Respond"
                 icon={<LogIn size={18} color="white" />}
                 onPress={onLogin}
                 style={styles.actionButton}
