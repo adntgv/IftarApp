@@ -13,6 +13,7 @@ declare const EventList: FC<{
   refreshing?: boolean;
   emptyMessage?: string;
   ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
+  isLoggedIn: boolean;
 }>;
 
 export default EventList; 

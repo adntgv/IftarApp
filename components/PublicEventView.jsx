@@ -54,7 +54,7 @@ const PublicEventView = ({
   };
 
   // Use either isVisible or isOpen prop, preferring isVisible if provided
-  const isModalVisible = isVisible !== undefined ? isVisible : isOpen;
+  const isModalVisible = true;
   
   // Add moon float animation
   const [floatAnim] = React.useState(new Animated.Value(0));
@@ -82,7 +82,7 @@ const PublicEventView = ({
     inputRange: [0, 1],
     outputRange: [0, -15],
   });
-
+  
   if (!isModalVisible || !event) return null;
 
   // Calculate days until event

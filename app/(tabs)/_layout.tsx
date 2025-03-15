@@ -10,7 +10,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import useAuthStore from '@/hooks/useAuth';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? 'light';
   const router = useRouter();
   const { checkSession, isAuthenticated, isLoading } = useAuthStore();
   const [isMounted, setIsMounted] = useState(false);
@@ -20,14 +20,6 @@ export default function TabLayout() {
     return () => setIsMounted(false);
   }, []);
 
-  useEffect(() => {
-    // Only redirect if explicitly not authenticated
-    // This prevents unnecessary reloads on each tab navigation
-    if (isAuthenticated === false && !isLoading && isMounted) {
-      router.replace('/(auth)/login');
-    }
-  }, [isAuthenticated, isLoading, isMounted]);
-
   // Show nothing while checking auth
   if (isLoading) {
     return null;
@@ -36,47 +28,38 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        tabBarStyle: {
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarBackground: () => <TabBarBackground />,
+        tabBarActiveTintColor: Colors[colorScheme].tint,
+        tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="create"
         options={{
           title: 'Create',
-          tabBarIcon: ({ color }) => (
-            <Plus
-              size={24}
-              color="white"
-              style={{
-                backgroundColor: Colors[colorScheme ?? 'light'].tint,
-                borderRadius: 20,
-                padding: 8,
-              }}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => <Plus size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -1,22 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { router } from 'expo-router';
-
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
+import { Button } from '@/components/ui';
 import CreateEventForm from '@/components/CreateEventForm';
-import { createEvent } from '@/utils/eventService';
-import { useAuth } from '../../context/AuthContext';
 import useEventsStore from '@/hooks/useEvents';
+import { createEvent } from '@/utils/eventService';
 
-// Define user type to fix TypeScript errors
+// Define User type inline
 interface User {
   userId: string;
   name: string;
   email: string;
-  [key: string]: any; // Allow for other properties
+  [key: string]: any;
 }
 
 export default function CreateScreen() {
+  const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const { fetchUserEvents } = useEventsStore();
   const [loading, setLoading] = useState(false);
@@ -28,27 +30,6 @@ export default function CreateScreen() {
     description: "",
     isPublic: true
   });
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      Alert.alert(
-        'Login Required',
-        'You need to be logged in to create events.',
-        [
-          {
-            text: 'Login',
-            onPress: () => router.navigate('/(auth)/login')
-          },
-          {
-            text: 'Cancel',
-            onPress: () => router.navigate('/(tabs)'),
-            style: 'cancel'
-          }
-        ]
-      );
-    }
-  }, [isAuthenticated]);
 
   // Create new event
   const handleCreateEvent = async () => {
@@ -93,35 +74,84 @@ export default function CreateScreen() {
     }
   };
 
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Header title="Create Event" action={null} actionLabel="" />
+        <View style={styles.content}>
+          <View style={styles.loginPromptContainer}>
+            <Text style={styles.loginPromptTitle}>Sign in to create events</Text>
+            <Text style={styles.loginPromptText}>
+              Create and manage your own Iftar events by signing in to your account.
+            </Text>
+            <Button
+              title="Sign In"
+              onPress={() => router.push('/(auth)/login')}
+              style={styles.loginButton}
+              icon={null}
+              textStyle={{}}
+              variant="primary"
+              fullWidth
+            >
+              Sign In
+            </Button>
+            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
+              <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Header 
-        title="Create Event"
-        action={null}
-        actionLabel="" 
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Header title="Create Event" action={null} actionLabel="" />
+      <CreateEventForm
+        newEvent={newEvent}
+        onChangeEvent={setNewEvent}
+        onSubmit={handleCreateEvent}
+        onCancel={() => router.navigate('/(tabs)')}
+        loading={loading}
       />
-      
-      <View style={styles.content}>
-        <CreateEventForm 
-          newEvent={newEvent}
-          onChangeEvent={setNewEvent}
-          onSubmit={handleCreateEvent}
-          onCancel={() => router.navigate('/(tabs)')}
-          loading={loading}
-        />
-      </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#fff',
   },
   content: {
     flex: 1,
-    paddingTop: 16,
-    paddingBottom: 16,
+    padding: 20,
+  },
+  loginPromptContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loginPromptTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  loginPromptText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  loginButton: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  signupText: {
+    color: '#3b82f6',
+    fontSize: 16,
   },
 }); 

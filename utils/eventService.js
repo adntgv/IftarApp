@@ -72,7 +72,8 @@ export const getPublicEvents = async () => {
   try {
     const response = await databases.listDocuments(
       ENV.DATABASE_ID,
-      EVENTS_COLLECTION_ID
+      EVENTS_COLLECTION_ID,
+      [Query.equal('isPublic', true)]
     );
     
     return response.documents;

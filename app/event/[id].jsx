@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView, Platform, Clipboard } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView, Platform, Clipboard, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO } from 'date-fns';
 import Card from '../../components/ui/Card';
@@ -34,51 +34,24 @@ const EventPage = () => {
   // Fetch event details
   useEffect(() => {
     const fetchEvent = async () => {
-      setLoading(true);
       try {
-        // Get current user
-        const userResult = await getCurrentUser();
-        setCurrentUser(userResult);
-        
-        console.log('Fetching event with ID:', id);
-        // Get event details
+        setLoading(true);
         const eventData = await eventService.getEventById(id);
-        console.log('Event data received:', JSON.stringify(eventData));
         
-        // Get attendees for this event
-        const attendees = await eventService.getEventAttendees(id);
-        console.log('Attendees data received:', JSON.stringify(attendees));
+        // If event is private and user is not logged in, show error
+        if (!eventData.isPublic && !isLoggedIn) {
+          setError('This is a private event. Please log in to view details.');
+          setLoading(false);
+          return;
+        }
         
-        // Make a copy to avoid modifying the original object
-        const processedEvent = { ...eventData, attendees };
+        setEvent(eventData);
         
         // Check if current user is the author
-        if (userResult && userResult.account && processedEvent.hostId === userResult.account.$id) {
-          setIsAuthor(true);
+        if (user) {
+          setIsAuthor(eventData.hostId === user.userId);
         }
         
-        // Format date if needed
-        try {
-          if (processedEvent.date && typeof processedEvent.date === 'string') {
-            const dateStr = processedEvent.date.includes('T') 
-              ? processedEvent.date 
-              : `${processedEvent.date}T00:00:00`;
-            
-            console.log('Parsing date:', dateStr);
-            const parsedDate = parseISO(dateStr);
-            console.log('Parsed date object:', parsedDate);
-            
-            const formattedDate = format(parsedDate, 'MMMM d, yyyy');
-            console.log('Formatted date:', formattedDate);
-            
-            processedEvent.formattedDate = formattedDate;
-          }
-        } catch (dateError) {
-          console.error('Error formatting date:', dateError);
-          // Continue without formatted date if there's an error
-        }
-        
-        setEvent(processedEvent);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching event:', err);
@@ -90,14 +63,52 @@ const EventPage = () => {
     if (id) {
       fetchEvent();
     }
-  }, [id]);
+  }, [id, user, isLoggedIn]);
 
   const handleBack = () => {
     router.push('/');
   };
 
   const handleLogin = () => {
-    router.push('/login');
+    router.push('/(auth)/login');
+  };
+
+  const handleAttendEvent = async () => {
+    if (!isLoggedIn) {
+      Alert.alert(
+        'Login Required',
+        'You need to be logged in to attend events.',
+        [
+          {
+            text: 'Login',
+            onPress: handleLogin
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          }
+        ]
+      );
+      return;
+    }
+
+    try {
+      await eventService.attendEvent(event.$id, user.userId);
+      // Refresh event data
+      const updatedEvent = await eventService.getEvent(id);
+      setEvent(updatedEvent);
+    } catch (error) {
+      console.error('Error attending event:', error);
+      Alert.alert('Error', 'Failed to attend event. Please try again.');
+    }
+  };
+
+  const handleEditEvent = () => {
+    if (!isLoggedIn) {
+      Alert.alert('Login Required', 'You need to be logged in to edit events.');
+      return;
+    }
+    router.push(`/event/edit/${event.$id}`);
   };
 
   if (loading) {
@@ -122,123 +133,85 @@ const EventPage = () => {
               title="Back to Events"
               onPress={handleBack}
               style={styles.backButton}
-            />
+              icon={null}
+              textStyle={{}}
+              variant="primary"
+              fullWidth
+            >
+              Back to Events
+            </Button>
           </Card>
         </View>
       </SafeAreaView>
     );
   }
- 
-  // Handlers for EventDetails actions
-  const handleShare = async () => {
-    try {
-      // Generate the share URL
-      const shareUrl = `${window.location.origin}/event/${event.$id}`;
-      
-      if (Platform.OS === 'web') {
-        // Web platform
-        if (navigator.share) {
-          await navigator.share({
-            title: event.title,
-            text: `Join me for ${event.title} on ${event.formattedDate} at ${event.time}`,
-            url: shareUrl
-          });
-        } else {
-          await navigator.clipboard.writeText(shareUrl);
-          alert('Share link copied to clipboard!');
-        }
-      } else {
-        // Mobile platforms
-        await Clipboard.setString(shareUrl);
-        alert('Share link copied to clipboard!');
-      }
-    } catch (error) {
-      console.error('Error sharing event:', error);
-    }
-  };
 
-  const handleInvite = async (email) => {
-    try {
-      if (!currentUser?.account?.$id) {
-        throw new Error('User not logged in');
-      }
 
-      await eventService.createInvitation(
-        event.$id,
-        currentUser.account.$id,
-        email
-      );
-      
-      alert('Invitation sent successfully!');
-    } catch (error) {
-      console.error('Error sending invitation:', error);
-      alert('Failed to send invitation. Please try again.');
-    }
-  };
+  // If the event is not public and user is not logged in, show login prompt
+  if (!event.isPublic && !isLoggedIn) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.loginPromptContainer}>
+            <Text style={styles.loginPromptTitle}>Private Event</Text>
+            <Text style={styles.loginPromptText}>
+              This is a private event. Please sign in to view the details.
+            </Text>
+            <Button
+              title="Sign In"
+              onPress={handleLogin}
+              style={styles.loginButton}
+              icon={null}
+              textStyle={{}}
+              variant="primary"
+              fullWidth
+            >
+              Sign In
+            </Button>
+            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
+              <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
-  const handleRespond = async (eventId, status) => {
-    try {
-      if (!currentUser?.account?.$id) {
-        throw new Error('User not logged in');
-      }
-
-      // Add the attendee
-      await eventService.addAttendee(
-        eventId,
-        currentUser.account.$id,
-        currentUser.user.name || 'Guest',
-        status,
-        event.hostId
-      );
-      
-      // Get updated attendees list
-      const attendees = await eventService.getEventAttendees(eventId);
-      
-      // Update the event state with new attendees
-      setEvent(prevEvent => ({
-        ...prevEvent,
-        attendees
-      }));
-      
-      alert('Attendance updated successfully!');
-    } catch (error) {
-      console.error('Error responding to event:', error);
-      alert('Failed to update attendance. Please try again.');
-    }
-  };
-  
   return (
-    <PublicEventView
-      event={event}
-      isOpen={true}
-      isVisible={true}
-      onClose={handleBack}
-      isLoggedIn={isLoggedIn}
-      onLogin={handleLogin}
-      isAuthor={isAuthor}
-      onShare={handleShare}
-      onInvite={handleInvite}
-      onRespond={handleRespond}
-      currentUser={currentUser}
-    />
+    <SafeAreaView style={styles.container}>
+      <PublicEventView
+        event={event}
+        isAuthor={isAuthor}
+        isLoggedIn={isLoggedIn}
+        onAttend={handleAttendEvent}
+        onEdit={handleEditEvent}
+        onBack={handleBack}
+        onLogin={handleLogin}
+        onClose={handleBack}
+        isVisible={true}
+      />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#fff',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   loadingText: {
-    marginTop: 16,
     fontSize: 16,
-    color: '#4b5563',
+    color: '#666',
+    marginTop: 12,
   },
   errorContainer: {
     flex: 1,
@@ -247,23 +220,49 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorCard: {
-    padding: 24,
-    alignItems: 'center',
+    padding: 20,
+    width: '100%',
   },
   errorTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   errorMessage: {
     fontSize: 16,
-    color: '#4b5563',
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  backButton: {
+    marginTop: 12,
+  },
+  loginPromptContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loginPromptTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  loginPromptText: {
+    fontSize: 16,
+    color: '#666',
     textAlign: 'center',
     marginBottom: 24,
   },
-  backButton: {
-    minWidth: 180,
+  loginButton: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  signupText: {
+    color: '#3b82f6',
+    fontSize: 16,
   },
 });
 

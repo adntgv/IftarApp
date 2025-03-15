@@ -88,20 +88,15 @@ const useEventsStore = create((set, get) => ({
 
   // Fetch all public events
   fetchPublicEvents: async () => {
-    const { user } = useAuthStore.getState();
-    if (!user) {
-      console.log('No user found');
-      return;
-    }
-
     set({ isLoading: true, error: null });
     try {
       const allPublicEvents = await eventService.getPublicEvents();
       
-      // Filter out user's own events
-      const filteredPublicEvents = allPublicEvents.filter(
-        event => event.hostId !== user.userId
-      );
+      // If user is logged in, filter out their own events
+      const { user } = useAuthStore.getState();
+      const filteredPublicEvents = user 
+        ? allPublicEvents.filter(event => event.hostId !== user.userId)
+        : allPublicEvents;
       
       // For each event, fetch the attendees
       const publicEventsWithAttendees = await Promise.all(
@@ -111,7 +106,7 @@ const useEventsStore = create((set, get) => ({
             ...event,
             attendees,
             isPublic: true,
-            isOtherUserEvent: true
+            isOtherUserEvent: user ? event.hostId !== user.userId : true
           };
         })
       );

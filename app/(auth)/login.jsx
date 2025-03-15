@@ -124,6 +124,12 @@ const LoginScreen = () => {
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
+
+        <View style={styles.signupContainer}>
+          <TouchableOpacity onPress={() => router.push('/')}>
+            <Text style={styles.signupLink}>Back To Events</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -202,6 +208,12 @@ const styles = StyleSheet.create({
   },
   passwordContainer: {
     marginBottom: 10,
+  },
+  backButtonContainer: {
+    width: '100%',
+    paddingHorizontal: 20,
+    marginTop: 40,
+    marginBottom: 20,
   },
 });
 
