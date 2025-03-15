@@ -8,6 +8,7 @@ import { Button } from '@/components/ui';
 import CreateEventForm from '@/components/CreateEventForm';
 import useEventsStore from '@/hooks/useEvents';
 import { createEvent } from '@/utils/eventService';
+import useAuthStore from '@/hooks/useAuth';
 
 // Define User type inline
 interface User {
@@ -19,7 +20,7 @@ interface User {
 
 export default function CreateScreen() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const { fetchUserEvents } = useEventsStore();
   const [loading, setLoading] = useState(false);
   const [newEvent, setNewEvent] = useState({
@@ -73,6 +74,20 @@ export default function CreateScreen() {
       setLoading(false);
     }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Header title="Create Event" action={null} actionLabel="" />
+        <View style={styles.content}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // Show login prompt if not authenticated
   if (!isAuthenticated) {
@@ -153,5 +168,14 @@ const styles = StyleSheet.create({
   signupText: {
     color: '#3b82f6',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
   },
 }); 
