@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ImageBackground, Animated, Platform, SafeAreaView, TouchableOpacity } from 'react-native';
-import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check, Share2, Send } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, ImageBackground, Animated, Platform, SafeAreaView, TouchableOpacity, Alert, Clipboard } from 'react-native';
+import { X, Calendar, MapPin, Edit, Info, ExternalLink, User, LogIn, Check, Share2, Send, Link, Lock } from 'lucide-react-native';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import Button from './ui/Button';
 import Card from './ui/Card';
@@ -121,6 +121,13 @@ const PublicEventView = ({
     outputRange: [0, -15],
   });
   
+  // Handle copying the direct link to clipboard
+  const handleCopyDirectLink = () => {
+    const shareUrl = `${Linking.createURL(`/event/${event.$id}`)}`;
+    Clipboard.setString(shareUrl);
+    Alert.alert('Success', 'Direct link copied to clipboard');
+  };
+  
   if (!isModalVisible || !event) return null;
 
   // Calculate days until event
@@ -205,6 +212,14 @@ const PublicEventView = ({
               <Text style={styles.title}>{event.title}</Text>
               <Text style={styles.host}>Hosted by {event.hostName || event.host}</Text>
               
+              {/* Privacy Badge */}
+              {!event.isPublic && (
+                <View style={styles.privacyBadge}>
+                  <Lock size={14} color="#f59e0b" style={styles.privacyIcon} />
+                  <Text style={styles.privacyText}>Private Event (Direct Link Access)</Text>
+                </View>
+              )}
+              
               {/* Add the countdown widgets */}
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
@@ -270,6 +285,32 @@ const PublicEventView = ({
               )}
             </Card>
           </View>
+
+          {/* Share Direct Link section for private events */}
+          {!event.isPublic && (
+            <View style={styles.detailsContainer}>
+              <Card style={styles.directLinkCard}>
+                <View style={styles.detailsHeader}>
+                  <Link size={18} color="#f59e0b" style={styles.detailsIcon} />
+                  <Text style={[styles.detailsTitle, {color: '#b45309'}]}>Share Direct Link</Text>
+                </View>
+                
+                <Text style={styles.directLinkText}>
+                  Anyone with this direct link can view this private event without logging in.
+                </Text>
+                
+                <Button
+                  variant="secondary"
+                  title="Copy Direct Link"
+                  icon={<Link size={16} color="#b45309" />}
+                  onPress={handleCopyDirectLink}
+                  style={styles.directLinkButton}
+                >
+                  Copy Direct Link
+                </Button>
+              </Card>
+            </View>
+          )}
           
           {/* Call to action */}
           <View style={styles.actionContainer}>
@@ -582,6 +623,41 @@ const styles = StyleSheet.create({
   },
   responseButton: {
     minWidth: 160,
+  },
+  privacyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff7ed',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ffedd5',
+  },
+  privacyIcon: {
+    marginRight: 6,
+  },
+  privacyText: {
+    fontSize: 12,
+    color: '#9a3412',
+    fontWeight: '500',
+  },
+  directLinkCard: {
+    backgroundColor: '#fff7ed',
+    borderColor: '#fed7aa',
+    marginBottom: 16,
+  },
+  directLinkText: {
+    fontSize: 14,
+    color: '#9a3412',
+    marginVertical: 8,
+  },
+  directLinkButton: {
+    backgroundColor: '#ffedd5',
+    borderColor: '#fed7aa',
+    marginTop: 8,
   },
 });
 

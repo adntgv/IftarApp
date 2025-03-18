@@ -20,6 +20,7 @@ const EventPage = () => {
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthor, setIsAuthor] = useState(false);
+  const [accessType, setAccessType] = useState('direct'); // Default to direct link access
 
   // Check session on mount
   useEffect(() => {
@@ -40,13 +41,7 @@ const EventPage = () => {
         setLoading(true);
         const eventData = await eventService.getEventById(id);
         
-        // If event is private and user is not logged in, show error
-        if (!eventData.isPublic && !isLoggedIn) {
-          setError('This is a private event. Please log in to view details.');
-          setLoading(false);
-          return;
-        }
-        
+        // All events are accessible by direct link now
         setEvent(eventData);
         
         // Check if current user is the author
@@ -156,36 +151,6 @@ const EventPage = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Event not found</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Show private event message if not logged in
-  if (!event.isPublic && !isLoggedIn) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.loginPromptContainer}>
-            <Text style={styles.loginPromptTitle}>Private Event</Text>
-            <Text style={styles.loginPromptText}>
-              This is a private event. Please sign in to view the details.
-            </Text>
-            <Button
-              title="Sign In"
-              onPress={handleLogin}
-              style={styles.loginButton}
-              icon={null}
-              textStyle={{}}
-              variant="primary"
-              fullWidth
-            >
-              Sign In
-            </Button>
-            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-              <Text style={styles.signupText}>Don't have an account? Sign up</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </SafeAreaView>
     );
