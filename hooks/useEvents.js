@@ -237,89 +237,45 @@ const useEventsStore = create((set, get) => ({
     }
   },
 
-  // Update attendance status for any event (not just invitations)
-  updateAttendanceStatus: async (eventId, status) => {
-    const { user } = useAuthStore.getState();
-    if (!user) return;
-
-    set({ isLoading: true, error: null });
+  // Update attendance status
+  updateAttendanceStatus: async (eventId, user, status) => {
     try {
-      // If status is 'not-attending', check if there's a record to delete
-      if (status === 'not-attending') {
-        const currentStatus = await eventService.getUserAttendanceStatus(eventId, user.userId);
-        // If user was already not attending, no action needed
-        if (currentStatus === 'not-attending') {
-          set({ isLoading: false });
-          return true;
+      set({ isLoading: true, error: null });
+      
+      if (!user) {
+        const authUser = useAuthStore.getState().user;
+        if (!authUser) {
+          throw new Error('User not authenticated');
         }
+        user = authUser;
       }
-
-      // Get the event to get the host ID
+      
+      // Update attendance in the database
+      const userId = user.userId;
+      const userName = user.name;
+      
+      console.log(`Updating attendance for event ${eventId}, user ${userId} to ${status}`);
+      
+      // Get the event to find the host ID
       const event = await eventService.getEventById(eventId);
-      if (!event) {
-        throw new Error('Event not found');
-      }
-
-      // Update attendance status in Appwrite
-      await eventService.addAttendee(
-        eventId,
-        user.userId,
-        user.name,
-        status,
-        event.hostId
-      );
+      const hostId = event.hostId;
       
-      // Immediately update local state for a better UI experience
-      set(state => {
-        // First, find the event in each category and update its attendance status
-        const updateEventInArray = (events) => {
-          return events.map(evt => 
-            evt.$id === eventId ? { ...evt, attendanceStatus: status } : evt
-          );
-        };
-        
-        // Update all events arrays
-        const updatedEvents = updateEventInArray(state.events);
-        const updatedPublicEvents = updateEventInArray(state.publicEvents);
-        const updatedAttendingEvents = updateEventInArray(state.attendingEvents);
-        
-        // If attending status changed to 'confirmed', add to attending events if not there
-        const shouldBeInAttending = status === 'confirmed';
-        
-        // If it should be in attending but isn't, add it (after ensuring we have the event)
-        let finalAttendingEvents = updatedAttendingEvents;
-        if (shouldBeInAttending && !finalAttendingEvents.some(e => e.$id === eventId)) {
-          const eventToAdd = [...updatedEvents, ...updatedPublicEvents].find(e => e.$id === eventId);
-          if (eventToAdd) {
-            finalAttendingEvents = [...finalAttendingEvents, {...eventToAdd, attendanceStatus: 'confirmed', isAttending: true}];
-          }
-        }
-        
-        // If it shouldn't be in attending but is, remove it
-        if (!shouldBeInAttending) {
-          finalAttendingEvents = finalAttendingEvents.filter(e => e.$id !== eventId);
-        }
-        
-        return {
-          events: updatedEvents,
-          publicEvents: updatedPublicEvents,
-          attendingEvents: finalAttendingEvents,
-          isLoading: false
-        };
-      });
+      // Add or update attendance
+      await eventService.addAttendee(eventId, userId, userName, status, hostId);
       
-      // Still do a fetch to ensure our data is synced with the server
-      // but do it in the background
-      Promise.all([
+      console.log('Attendance updated successfully');
+      
+      // Refresh events after updating attendance
+      await Promise.all([
         get().fetchUserEvents(),
+        get().fetchPublicEvents(),
         get().fetchAttendingEvents()
-      ]).catch(error => {
-        console.error('Background fetch error:', error);
-      });
+      ]);
       
-      get().setAnimation('respond');
+      set({ isLoading: false });
       return true;
     } catch (error) {
+      console.error('Error updating attendance status:', error);
       set({ error: error.message, isLoading: false });
       throw error;
     }

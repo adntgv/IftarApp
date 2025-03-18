@@ -155,8 +155,8 @@ const useAuthStore = create(
         const now = Date.now();
         const lastCheck = get().lastSessionCheck;
         
-        // Prevent checking more than once every 5 seconds
-        if (now - lastCheck < 5000) {
+        // Prevent checking more than once every 2 seconds (reduced from 5)
+        if (now - lastCheck < 2000) {
           console.log('Skipping session check - checked recently');
           return get().account ? { account: get().account, user: get().user } : null;
         }
@@ -182,9 +182,6 @@ const useAuthStore = create(
               isLoggedIn: true,
               error: null
             });
-            console.log('Auth state updated with user data');
-            // Debug line to check isLoggedIn
-            console.log(`isLoggedIn is ${get().isLoggedIn}`);
             return result;
           } else {
             // Clear user data if no valid session
@@ -196,12 +193,11 @@ const useAuthStore = create(
               isLoggedIn: false,
               error: null
             });
-            console.log('No valid session found, cleared auth state');
             return null;
           }
         } catch (error) {
-          console.warn('Session check failed:', error);
-          // Important: Make sure to set isLoading to false to prevent infinite loading
+          console.error('Session check failed:', error);
+          // Clear auth state on error
           set({ 
             user: null,
             account: null,
@@ -210,7 +206,6 @@ const useAuthStore = create(
             isAuthenticated: false,
             isLoggedIn: false
           });
-          console.log('Auth state cleared due to error');
           return null;
         }
       },

@@ -12,10 +12,14 @@ export default function AuthLayout() {
   // Check if user is already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      const result = await checkSession();
-      if (result) {
-        // User is authenticated, redirect to the app
-        router.replace('/(tabs)');
+      try {
+        const result = await checkSession();
+        if (result) {
+          // User is authenticated, redirect to the app
+          router.replace('/(tabs)');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
       }
     };
 

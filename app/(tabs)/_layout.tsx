@@ -16,12 +16,26 @@ export default function TabLayout() {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    const initSession = async () => {
+      try {
+        await checkSession();
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+
+    if (isMounted) {
+      initSession();
+    }
+  }, [isMounted]);
+
+  useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
 
   // Show nothing while checking auth
-  if (isLoading) {
+  if (isLoading || !isMounted) {
     return null;
   }
 

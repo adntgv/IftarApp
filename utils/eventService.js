@@ -119,17 +119,33 @@ export const getAttendingEvents = async (userId) => {
 };
 
 /**
- * Get an event by ID
+ * Get event by ID
  */
 export const getEventById = async (eventId) => {
   try {
+    console.log('Fetching event with ID:', eventId);
     const event = await databases.getDocument(
       ENV.DATABASE_ID,
       EVENTS_COLLECTION_ID,
       eventId
     );
     
-    return event;
+    // Fetch attendees for this event
+    const attendeesResponse = await databases.listDocuments(
+      ENV.DATABASE_ID,
+      ATTENDEES_COLLECTION_ID,
+      [Query.equal('eventId', eventId)]
+    );
+    
+    // Add attendees to the event object
+    const eventWithAttendees = {
+      ...event,
+      attendees: attendeesResponse.documents
+    };
+    
+    console.log(`Found ${eventWithAttendees.attendees.length} attendees for event ${eventId}`);
+    
+    return eventWithAttendees;
   } catch (error) {
     console.error('Error fetching event by ID:', error);
     throw error;
@@ -249,6 +265,8 @@ export const getEventAttendees = async (eventId) => {
  */
 export const addAttendee = async (eventId, userId, name, status = 'pending', hostId) => {
   try {
+    console.log(`Adding/updating attendee: ${userId} to event ${eventId} with status ${status}`);
+    
     // Check if the user is already an attendee
     const existingAttendees = await databases.listDocuments(
       ENV.DATABASE_ID,
@@ -263,6 +281,7 @@ export const addAttendee = async (eventId, userId, name, status = 'pending', hos
     if (status === 'not-attending') {
       // If the user is already an attendee, delete the record
       if (existingAttendees.documents.length > 0) {
+        console.log(`Deleting attendance record for ${userId}`);
         await databases.deleteDocument(
           ENV.DATABASE_ID,
           ATTENDEES_COLLECTION_ID,
@@ -276,6 +295,7 @@ export const addAttendee = async (eventId, userId, name, status = 'pending', hos
     
     // If the user is already an attendee, update their status
     if (existingAttendees.documents.length > 0) {
+      console.log(`Updating existing attendance record for ${userId} to ${status}`);
       return await databases.updateDocument(
         ENV.DATABASE_ID,
         ATTENDEES_COLLECTION_ID,
@@ -285,6 +305,7 @@ export const addAttendee = async (eventId, userId, name, status = 'pending', hos
     }
     
     // Otherwise, add them as a new attendee
+    console.log(`Creating new attendance record for ${userId} with status ${status}`);
     const attendee = await databases.createDocument(
       ENV.DATABASE_ID,
       ATTENDEES_COLLECTION_ID,
@@ -299,6 +320,7 @@ export const addAttendee = async (eventId, userId, name, status = 'pending', hos
       }
     );
     
+    console.log(`Successfully created attendance record: ${attendee.$id}`);
     return attendee;
   } catch (error) {
     console.error('Error adding attendee:', error);

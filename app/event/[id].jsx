@@ -7,12 +7,14 @@ import Button from '../../components/ui/Button';
 import PublicEventView from '../../components/PublicEventView';
 import eventService from '../../utils/eventService';
 import useAuthStore from '../../hooks/useAuth';
+import useEventsStore from '../../hooks/useEvents';
 import { getCurrentUser } from '../../utils/appwrite';
 
 const EventPage = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { isLoggedIn, user, checkSession } = useAuthStore();
+  const { updateAttendanceStatus } = useEventsStore();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -73,33 +75,38 @@ const EventPage = () => {
     router.push('/(auth)/login');
   };
 
-  const handleAttendEvent = async () => {
-    if (!isLoggedIn) {
-      Alert.alert(
-        'Login Required',
-        'You need to be logged in to attend events.',
-        [
-          {
-            text: 'Login',
-            onPress: handleLogin
-          },
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          }
-        ]
-      );
-      return;
-    }
-
+  const handleAttendEvent = async (eventId, status) => {
+    console.log('Handling attendance for event...', eventId, status);
     try {
-      await eventService.attendEvent(event.$id, user.userId);
-      // Refresh event data
-      const updatedEvent = await eventService.getEvent(id);
-      setEvent(updatedEvent);
+      if (!isLoggedIn) {
+        Alert.alert('Login Required', 'You need to be logged in to track your attendance.');
+        return;
+      }
+      
+      console.log('Updating attendance status to:', status);
+      await updateAttendanceStatus(eventId, user, status);
+      
+      // Add a small delay to ensure DB is updated
+      setTimeout(async () => {
+        // Fetch the updated event data
+        const updatedEvent = await eventService.getEventById(id);
+        console.log(`Event now has ${updatedEvent.attendees?.length || 0} attendees`);
+        setEvent(updatedEvent);
+        
+        // Check if user is attending after update
+        const isNowAttending = updatedEvent.attendees?.some(a => a.userId === user.userId);
+        
+        // Show success message
+        Alert.alert(
+          'Success', 
+          isNowAttending 
+            ? 'You are now attending this event!' 
+            : 'You are no longer attending this event.'
+        );
+      }, 500);
     } catch (error) {
-      console.error('Error attending event:', error);
-      Alert.alert('Error', 'Failed to attend event. Please try again.');
+      console.error('Error updating attendance:', error);
+      Alert.alert('Error', 'Failed to update attendance status. Please try again.');
     }
   };
 
@@ -111,43 +118,50 @@ const EventPage = () => {
     router.push(`/event/edit/${event.$id}`);
   };
 
+  // Show loading state
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color="#0000ff" />
           <Text style={styles.loadingText}>Loading event details...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  if (error || !event) {
+  // Show error state
+  if (error) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Card style={styles.errorCard}>
-            <Text style={styles.errorTitle}>Event Not Found</Text>
-            <Text style={styles.errorMessage}>{error || 'The event you are looking for does not exist or may have been removed.'}</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          {!isLoggedIn && (
             <Button
-              title="Back to Events"
-              onPress={handleBack}
-              style={styles.backButton}
-              icon={null}
-              textStyle={{}}
-              variant="primary"
-              fullWidth
+              title="Sign In"
+              onPress={handleLogin}
+              style={styles.loginButton}
             >
-              Back to Events
+              Sign In
             </Button>
-          </Card>
+          )}
         </View>
       </SafeAreaView>
     );
   }
 
+  // Show not found state
+  if (!event) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Event not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
-  // If the event is not public and user is not logged in, show login prompt
+  // Show private event message if not logged in
   if (!event.isPublic && !isLoggedIn) {
     return (
       <SafeAreaView style={styles.container}>
@@ -189,6 +203,7 @@ const EventPage = () => {
         onLogin={handleLogin}
         onClose={handleBack}
         isVisible={true}
+        currentUser={user ? { userId: user.userId, name: user.name } : null}
       />
     </SafeAreaView>
   );
@@ -262,6 +277,9 @@ const styles = StyleSheet.create({
   },
   signupText: {
     color: '#3b82f6',
+    fontSize: 16,
+  },
+  errorText: {
     fontSize: 16,
   },
 });

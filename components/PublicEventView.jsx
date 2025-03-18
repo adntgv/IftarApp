@@ -13,25 +13,58 @@ import * as Linking from 'expo-linking';
  */
 const PublicEventView = ({ 
   event, 
-  isOpen, 
+  isAuthor, 
+  isLoggedIn,
+  onBack,
+  onEdit,
+  onAttend,
   isVisible,
-  onClose, 
-  isLoggedIn, 
   onLogin,
-  isAuthor,
   onShare,
   onInvite,
-  onRespond,
   currentUser 
 }) => {
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteSent, setInviteSent] = useState(false);
+  const [isUpdatingAttendance, setIsUpdatingAttendance] = useState(false);
+  const [localAttendanceStatus, setLocalAttendanceStatus] = useState(null);
   
   // Get current user's attendance status
   const currentUserAttendance = event?.attendees?.find(
-    attendee => attendee.userId === currentUser?.account?.$id
+    attendee => attendee.userId === currentUser?.userId
   );
+  
+  // Use local state if available, otherwise use server state
+  const isAttending = localAttendanceStatus !== null 
+    ? localAttendanceStatus === 'confirmed'
+    : currentUserAttendance?.status === 'confirmed';
+  
+  // Calculate attendance count properly
+  const confirmedAttendees = event?.attendees?.filter(a => a.status === 'confirmed') || [];
+  const attendeesCount = confirmedAttendees.length;
+  
+  console.log('Current user:', currentUser?.userId);
+  console.log('Current attendance status:', currentUserAttendance?.status);
+  console.log('Total confirmed attendees:', attendeesCount);
+  
+  // Handle attendance status change
+  const handleAttendanceChange = async (eventId, status) => {
+    // Update local state immediately for responsive UI
+    setIsUpdatingAttendance(true);
+    setLocalAttendanceStatus(status);
+    
+    try {
+      // Call the actual update function
+      await onAttend(eventId, status);
+    } catch (error) {
+      // If there's an error, revert the local state
+      setLocalAttendanceStatus(currentUserAttendance?.status || null);
+      console.error('Error updating attendance:', error);
+    } finally {
+      setIsUpdatingAttendance(false);
+    }
+  };
   
   // Reset invite sent status
   React.useEffect(() => {
@@ -42,6 +75,11 @@ const PublicEventView = ({
       return () => clearTimeout(timer);
     }
   }, [inviteSent]);
+
+  // Reset local attendance status when event changes
+  React.useEffect(() => {
+    setLocalAttendanceStatus(null);
+  }, [event?.$id]);
 
   // Handle send invitation
   const handleSendInvite = async () => {
@@ -155,7 +193,7 @@ const PublicEventView = ({
               <Button 
                 variant="secondary" 
                 icon={<X size={20} color="#1f2937" />}
-                onPress={onClose}
+                onPress={onBack}
                 style={styles.closeButton}
               />
             </View>
@@ -179,11 +217,7 @@ const PublicEventView = ({
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Attending</Text>
-                  <Text style={styles.statValueAttending}>
-                    {event.attendees 
-                      ? event.attendees.filter(a => a.status === 'confirmed').length 
-                      : 0}
-                  </Text>
+                  <Text style={styles.statValueAttending}>{attendeesCount}</Text>
                 </View>
               </View>
             </View>
@@ -266,22 +300,30 @@ const PublicEventView = ({
                   Invite Guests
                 </Button>
               </View>
-            ) : currentUserAttendance?.status === 'confirmed' ? (
-              <Button
-                variant="secondary"
-                title="Revoke Attendance"
-                icon={<X size={18} color="#4b5563" />}
-                onPress={() => onRespond && onRespond(event.$id, 'not-attending')}
-                style={styles.actionButton}
-              />
             ) : (
-              <Button
-                variant="primary"
-                title="I'm Attending"
-                icon={<Check size={18} color="white" />}
-                onPress={() => onRespond && onRespond(event.$id, 'confirmed')}
-                style={styles.actionButton}
-              />
+              <View style={styles.responseButtons}>
+                {isAttending ? (
+                  <Button
+                    variant="danger"
+                    icon={<Check size={18} color="white" />}
+                    onPress={() => handleAttendanceChange(event.$id, 'not-attending')}
+                    style={styles.responseButton}
+                    disabled={isUpdatingAttendance}
+                  >
+                    {isUpdatingAttendance ? 'Updating...' : 'Cancel Attendance'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    icon={<Check size={18} color="white" />}
+                    onPress={() => handleAttendanceChange(event.$id, 'confirmed')}
+                    style={styles.responseButton}
+                    disabled={isUpdatingAttendance}
+                  >
+                    {isUpdatingAttendance ? 'Updating...' : 'I\'m Attending'}
+                  </Button>
+                )}
+              </View>
             )}
           </View>
 
@@ -533,6 +575,13 @@ const styles = StyleSheet.create({
   inviteSuccessText: {
     color: '#16a34a',
     fontWeight: '500',
+  },
+  responseButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  responseButton: {
+    minWidth: 160,
   },
 });
 
